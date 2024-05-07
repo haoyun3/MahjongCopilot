@@ -198,6 +198,11 @@ class LanStrZHS(LanStr):
     RANDOM_CHOICE = "AI 选项随机化(去重)"
     REPLY_EMOJI_CHANCE = "回复表情概率"
     
+    # humanlike
+    EMOJI_RON = "荣和前发的表情"
+    EMOJI_TUSMO = "自摸前发的表情"
+    EMOJI_REACH = "立直前发的表情"
+    
     RANDOM_DELAY_RANGE = "基础延迟随机范围(秒)"
     GAME_LEVELS = ["铜之间", "银之间", "金之间", "玉之间", "王座之间"]
     GAME_MODES = ["四人东","四人南","三人东","三人南"]

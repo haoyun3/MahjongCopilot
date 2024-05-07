@@ -64,6 +64,11 @@ class Settings:
         self.auto_join_level:int = self._get_value("auto_join_level", 1, self.valid_game_level)
         self.auto_join_mode:int = self._get_value("auto_join_mode", utils.GAME_MODES[0], self.valid_game_mode)
         
+        # Humanlike settings
+        self.auto_emoji_ron:int = self._get_value("auto_emoji_ron", 1, lambda x: 0 <= x <= 9)
+        self.auto_emoji_tusmo:int = self._get_value("auto_emoji_tusmo", 2, lambda x: 0 <= x <= 9)
+        self.auto_emoji_reach:int = self._get_value("auto_emoji_reach", 5, lambda x: 0 <= x <= 9)
+        
         self.save_json()
         LOGGER.info("Settings initialized and saved to %s", self._json_file)
         

@@ -621,6 +621,26 @@ class Automation:
         
         # Find the button coords and click (None, Chii, Pon, etc.)
         steps = []
+
+        if mstype_from_mjai in [MSType.zimo, MSType.hora, MSType.reach]:
+            if mstype_from_mjai == MSType.zimo:
+                emoji_idx = self.st.auto_emoji_tusmo - 1
+            elif mstype_from_mjai == MSType.hora:
+                emoji_idx = self.st.auto_emoji_ron - 1
+            else: #if mstype_from_mjai == MSType.reach:
+                emoji_idx = self.st.auto_emoji_reach - 1
+
+            if 0 <= emoji_idx < 9:
+                x,y = Positions.EMOJI_BUTTON
+                steps = [ActionStepDelay(random.uniform(0.5, 1.0)), ActionStepMove(x*self.scaler, y*self.scaler)]
+                steps.append(ActionStepDelay(random.uniform(0.1, 0.2)))
+                steps.append(ActionStepClick())            
+                x,y = Positions.EMOJIS[emoji_idx]
+                steps.append(ActionStepMove(x*self.scaler,y*self.scaler))
+                steps.append(ActionStepDelay(random.uniform(0.1, 0.2)))
+                steps.append(ActionStepClick())
+                steps.append(ActionStepDelay(random.uniform(1.0, 2.0)))
+
         the_op = None
         for idx, op in enumerate(op_list):
             if op['type'] == mstype_from_mjai:

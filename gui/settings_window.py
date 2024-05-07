@@ -241,6 +241,29 @@ class SettingsWindow(tk.Toplevel):
         delay_upper_entry = tk.Entry(main_frame, textvariable= self.delay_random_upper_var,width=std_wid)
         delay_upper_entry.grid(row=cur_row, column=2, **args_entry)
         
+        # humanlike emoji setting
+        cur_row += 1       
+        _label = ttk.Label(main_frame, text=self.st.lan().EMOJI_RON)
+        _label.grid(row=cur_row, column=0, **args_label)
+        self.emoji_ron_var = tk.StringVar(value=self.st.auto_emoji_ron)
+        options = ['0 (Off)',1,2,3,4,5,6,7,8,9]
+        random_choice_entry = ttk.Combobox(
+            main_frame, textvariable=self.emoji_ron_var, values=options, state="readonly", width=std_wid)
+        random_choice_entry.grid(row=cur_row, column=1, **args_entry)
+        _label = ttk.Label(main_frame, text=self.st.lan().EMOJI_TUSMO)
+        _label.grid(row=cur_row, column=2, **args_label)
+        self.emoji_tusmo_var = tk.StringVar(value=self.st.auto_emoji_tusmo)
+        random_choice_entry = ttk.Combobox(
+            main_frame, textvariable=self.emoji_tusmo_var, values=options, state="readonly", width=std_wid)
+        random_choice_entry.grid(row=cur_row, column=3, **args_entry)
+        cur_row += 1       
+        _label = ttk.Label(main_frame, text=self.st.lan().EMOJI_REACH)
+        _label.grid(row=cur_row, column=0, **args_label)
+        self.emoji_reach_var = tk.StringVar(value=self.st.auto_emoji_reach)
+        random_choice_entry = ttk.Combobox(
+            main_frame, textvariable=self.emoji_reach_var, values=options, state="readonly", width=std_wid)
+        random_choice_entry.grid(row=cur_row, column=1, **args_entry)
+        
         # tips :Settings
         cur_row += 1
         label_settings = ttk.Label(main_frame, text=self.st.lan().SETTINGS_TIPS, width=std_wid*4)
@@ -312,6 +335,9 @@ class SettingsWindow(tk.Toplevel):
         # auto play settings
         randomized_choice_new:int = int(self.randomized_choice_var.get().split(' ')[0])
         reply_emoji_new:float = int(self.reply_emoji_var.get().split('%')[0])/100
+        emoji_ron_new:int = int(self.emoji_ron_var.get().split(' ')[0])
+        emoji_tusmo_new:int = int(self.emoji_tusmo_var.get().split(' ')[0])
+        emoji_reach_new:int = int(self.emoji_reach_var.get().split(' ')[0])
         try:
             delay_lower_new = self.delay_random_lower_var.get()
             delay_upper_new = self.delay_random_upper_var.get()
@@ -349,6 +375,10 @@ class SettingsWindow(tk.Toplevel):
         self.st.auto_reply_emoji_rate = reply_emoji_new        
         self.st.delay_random_lower = delay_lower_new
         self.st.delay_random_upper = delay_upper_new
+
+        self.st.auto_emoji_ron = emoji_ron_new 
+        self.st.auto_emoji_tusmo = emoji_tusmo_new 
+        self.st.auto_emoji_reach = emoji_reach_new 
         
         self.st.save_json()
         self.exit_save = True
