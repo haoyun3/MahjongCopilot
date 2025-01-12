@@ -333,14 +333,14 @@ class Automation:
         delay = random.uniform(self.st.delay_random_lower, self.st.delay_random_upper)    # base delay        
         if mjai_type == MjaiType.DAHAI:
             # extra time for first round and East
-            if gi.is_first_round and  gi.jikaze  == 'E':
+            if gi.is_first_round and gi.jikaze == 'E':
                 delay += 4.5
                 
-            extra_time:float = 0.0
+            extra_time: float = 0.0
             
             # more time for 19 < 28 < others
             pai = mjai_action['pai']
-            if pai in MJAI_TILES_19 or pai == gi.my_tsumohai :
+            if pai in MJAI_TILES_19 or pai == gi.my_tsumohai:
                 extra_time += 0.0
             elif pai in MJAI_TILES_28:
                 extra_time += 0.5
@@ -357,15 +357,15 @@ class Automation:
             delay += 0.0
         elif mjai_type == MjaiType.NUKIDORA:
             delay += 0.0
-        elif mjai_type == MjaiType.RYUKYOKU: # more time for RYUKYOKU
-            if gi.jikaze  == 'E':
+        elif mjai_type == MjaiType.RYUKYOKU:  # more time for RYUKYOKU
+            if gi.jikaze == 'E':
                 delay += 1.5
             delay += 2.0
         else:       # chi/pon/kan/others
             delay += 0.5
         
-        subtract = max(0, subtract-0.5)
-        delay = max(0, delay-subtract)    # minimal delay =0
+        subtract = max(0, subtract - 0.5)
+        delay = max(0, delay - subtract)    # minimal delay =0
         # LOGGER.debug("Subtract=%.2f, Delay=%.2f", subtract, delay)
         return delay
      
@@ -709,14 +709,15 @@ class Automation:
             x, y: target position in 16x9 resolution
             random_moves(int): number of random moves before target. None -> use settings"""
         steps = []
-        if self.st.auto_random_move:  # random moves, within (-0.5, 0.5) x screen size of target      
-            for _i in range(3):
-                rx = x + 16*random.uniform(-0.5, 0.5)
-                rx = max(0, min(16, rx))
-                ry = y + 9*random.uniform(-0.5, 0.5)
-                ry = max(0, min(9, ry))
-                steps.append(ActionStepMove(rx*self.scaler, ry*self.scaler, random.randint(2, 5)))
-                steps.append(ActionStepDelay(random.uniform(0.05, 0.11)))
+        if self.st.auto_random_move:  # random moves, within (-0.5, 0.5) x screen size of target
+            while random.random() < 0.4:
+                for _i in range(3):
+                    rx = x + 16*random.uniform(-0.5, 0.5)
+                    rx = max(0, min(16, rx))
+                    ry = y + 9*random.uniform(-0.5, 0.5)
+                    ry = max(0, min(9, ry))
+                    steps.append(ActionStepMove(rx*self.scaler, ry*self.scaler, random.randint(2, 5)))
+                    steps.append(ActionStepDelay(random.uniform(0.05, 0.11)))
         # then move to target
         tx, ty = x*self.scaler, y*self.scaler
         steps.append(ActionStepMove(tx, ty, random.randint(2, 5)))
