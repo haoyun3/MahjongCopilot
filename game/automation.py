@@ -622,7 +622,7 @@ class Automation:
         # Find the button coords and click (None, Chii, Pon, etc.)
         steps = []
 
-        if mstype_from_mjai in [MSType.zimo, MSType.hora, MSType.reach]:
+        if mstype_from_mjai in [MSType.zimo, MSType.hora, MSType.reach] and random.random() < 0.5:
             if mstype_from_mjai == MSType.zimo:
                 emoji_idx = self.st.auto_emoji_tusmo - 1
             elif mstype_from_mjai == MSType.hora:
