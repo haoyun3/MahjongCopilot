@@ -672,6 +672,7 @@ class Automation:
                 combs = []
                 
             if len(combs) == 1:     # no need to click. return directly
+                steps.append(ActionStepDelay(random.uniform(1.5, 3.0)))
                 return steps
             elif len(combs) == 0:   # something is wrong. no combination offered in liqi msg
                 LOGGER.warning("mjai type %s, but no combination in liqi operation list", mjai_type)
@@ -692,6 +693,7 @@ class Automation:
                         candidate_idx = int((-(len(combs)/2)+idx+0.5)*2+3)
                         x,y = Positions.CANDIDATES_KAN[candidate_idx]
                         steps += self.steps_randomized_move_click(x,y)
+                    steps.append(ActionStepDelay(random.uniform(1.5, 3.0)))
                     return steps
         
         # other mjai types: no additional clicks
