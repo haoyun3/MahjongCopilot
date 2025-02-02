@@ -110,11 +110,11 @@ class LiqiProto:
             _, lq, message_name = method_name.split('.')
             liqi_pb2_notify = getattr(pb, message_name)
             proto_obj = liqi_pb2_notify.FromString(msg_block[1]['data'])
-            dict_obj = MessageToDict(proto_obj, including_default_value_fields=True)
+            dict_obj = MessageToDict(proto_obj, always_print_fields_with_no_presence=True)
             if 'data' in dict_obj:
                 B = base64.b64decode(dict_obj['data'])
                 action_proto_obj = getattr(pb, dict_obj['name']).FromString(decode(B))
-                action_dict_obj = MessageToDict(action_proto_obj, including_default_value_fields=True)
+                action_dict_obj = MessageToDict(action_proto_obj, always_print_fields_with_no_presence=True)
                 dict_obj['data'] = action_dict_obj
             msg_id = -1
         else:
@@ -134,7 +134,7 @@ class LiqiProto:
                 proto_domain = self.jsonProto['nested'][lq]['nested'][service]['methods'][rpc]
                 liqi_pb2_req = getattr(pb, proto_domain['requestType'])
                 proto_obj = liqi_pb2_req.FromString(msg_block[1]['data'])
-                dict_obj = MessageToDict(proto_obj, including_default_value_fields=True)
+                dict_obj = MessageToDict(proto_obj, always_print_fields_with_no_presence=True)
                 self.res_type[msg_id] = (method_name, getattr(
                     pb, proto_domain['responseType']))
                 self.msg_id = msg_id
@@ -143,7 +143,7 @@ class LiqiProto:
                 assert(msg_id in self.res_type)
                 method_name, liqi_pb2_res = self.res_type.pop(msg_id)
                 proto_obj = liqi_pb2_res.FromString(msg_block[1]['data'])
-                dict_obj = MessageToDict(proto_obj, including_default_value_fields=True)
+                dict_obj = MessageToDict(proto_obj, always_print_fields_with_no_presence=True)
             else:
                 LOGGER.error('unknow msg (type=%s): %s', msg_type, buf)
                 return None
@@ -165,7 +165,7 @@ class LiqiProto:
         return msgs
 
     def parse_syncGameActions(self, dict_obj):
-        dict_obj['data'] = MessageToDict(getattr(pb, dict_obj['name']).FromString(base64.b64decode(dict_obj['data'])), including_default_value_fields=True)
+        dict_obj['data'] = MessageToDict(getattr(pb, dict_obj['name']).FromString(base64.b64decode(dict_obj['data'])), always_print_fields_with_no_presence=True)
         msg_id = -1
         result = {'id': msg_id, 'type': MsgType.NOTIFY,
                   'method': '.lq.ActionPrototype', 'data': dict_obj}

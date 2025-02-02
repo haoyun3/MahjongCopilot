@@ -422,7 +422,7 @@ class Automation:
             liqi_operation = game_state.last_operation
             more_steps: list[ActionStep] = self.steps_button_action(mjai_action, gi, liqi_operation)
             LOGGER.debug('button aciton!!!!!DELAY IT')
-            more_steps.append(ActionStepDelay(random.uniform(1.5, 3)))
+            more_steps.append(ActionStepDelay(1))
         else:
             LOGGER.error("No automation for unrecognized mjai type: %s", mjai_type)
             return False

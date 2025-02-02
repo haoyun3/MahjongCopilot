@@ -3,11 +3,13 @@ This file contains the BotManager class, which manages the bot logic, game state
 It also manages the browser and overlay display
 The BotManager class is run in a separate thread, and provide interface methods for UI
 """
+import json
 # pylint: disable=broad-exception-caught
 import time
 import queue
 import threading
 
+from activity import run_interactive_program
 from game.browser import GameBrowser
 from game.game_state import GameState
 from game.automation import Automation, UiState, JOIN_GAME, END_GAME
@@ -404,7 +406,18 @@ class BotManager:
                 LOGGER.debug(
                     'Lobby msg(suppressed): id=%s, type=%s, method=%s, len=%d',
                     liqi_id, liqi_type, liqi_method, len(str(liqimsg)))
-
+                if '.lq.Lobby.amulet' in liqi_method:
+                    print('\n\n======================================\n\n')
+                    print(liqi_method, "data = ", liqimsg.get('data'))
+                    print('\n\n======================================\n\n')
+                    if (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityFetchInfo'):
+                        with open("D:/Data/maj_input.txt", "w", encoding='utf-8') as f:
+                            f.write(json.dumps(liqimsg["data"]["data"]["game"]))
+                        run_interactive_program("qingyun")
+                    elif (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityUpgrade'):
+                        with open("D:/Data/maj_input.txt", "w", encoding='utf-8') as f:
+                            f.write(json.dumps(liqimsg["data"]["game"]))
+                        run_interactive_program("qingyun")
             else:
                 LOGGER.debug('Other msg (ignored): %s', liqimsg)
                 
