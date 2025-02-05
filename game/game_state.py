@@ -173,7 +173,7 @@ class GameState:
                 raise RuntimeError(f'Unexpected liqi message, method={liqi_method}, type={liqi_type}')
         
         # Actions
-        elif liqi_method == LiqiMethod.ActionPrototype: # assert all ActionPrototype are notify type
+        elif liqi_method == LiqiMethod.ActionPrototype:  # assert all ActionPrototype are notify type
             # We assume here, when there is new action, last reaction has done/expired
             self.last_reaction_pending = False
             

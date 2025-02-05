@@ -1,6 +1,6 @@
 import json
 
-from mode import li_pai, mode1, mode2, mode3, modeqing
+from mode import li_pai, mode1, mode2, mode3, mode_qing
 
 
 def main():
@@ -23,9 +23,9 @@ def main():
     elif mode == 3:
         mode3(p_dora, p_hand, p_mo)
     elif mode == 4:
-        modeqing(p_dora, p_hand, p_mo, p_left, 'p')
+        mode_qing(p_dora, p_hand, p_mo, p_left, 'p')
     elif mode == 5:
-        modeqing(p_dora, p_hand, p_mo, p_left, 's')
+        mode_qing(p_dora, p_hand, p_mo, p_left, 's')
     else:
         print("没做")
 

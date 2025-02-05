@@ -291,7 +291,7 @@ def mode3(p_dora: list, p_hand: list, p_mo: list):
     print(li_pai(p_hand))
 
 
-def modeqing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
+def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
     op = int(input("请选择额外规则:\n"
                    "0, 无额外规则\n"
                    "1, 换牌次数不超过3次\n"
@@ -310,17 +310,21 @@ def modeqing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
         need_raw = []
         for pai in target["hand"]:
             need_raw.append(f"{pai}{sp}")
-        need = {}
+        need_backup = {}
         for pai in need_raw:
-            if pai not in need:
-                need[pai] = 1
-            else:
-                need[pai] += 1
-        for k in range(len(p_mo)):
-            if pai_in_which(p_mo[k], need):
-                pai_get_num(p_mo[k], need, -1)
-                if pai_get_num(p_mo[k], need) == 0:
-                    pai_del_which(p_mo[k], need)
+            pai_get_num(pai, need_backup, 1)
+        left = 0
+        right = len(p_mo) - 2
+        ans = -1
+        ans_data = {}
+        while left <= right:
+            k = (left + right) // 2
+            need = need_backup.copy()
+            for j in range(k + 1):
+                if pai_in_which(p_mo[j], need):
+                    pai_get_num(p_mo[j], need, -1)
+                    if pai_get_num(p_mo[j], need) == 0:
+                        pai_del_which(p_mo[j], need)
             flag = True
             future_raw = {}
             change_history = []
@@ -385,35 +389,47 @@ def modeqing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
                     flag = False
                     break
             if flag:
-                if k < len(p_mo) - 1:
-                    outputStr = "以下为开局换牌序列"
-                    for output in change_history:
-                        outputStr += f'\n{output}'
-                    outputStr += f'\n以下为换完后手牌\n{hand}'
-                    outputStr += f'\n以下为听牌时牌型\n{need_raw}'
-                    outputStr += f'\n牌山对照: \n{p_mo[:9]}\n{p_mo[9: 18]}\n{p_mo[18: 27]}\n{p_mo[27:]}'
-                    outputStr += f"\n将在第{k + 1}巡自摸 {p_mo[k]} 凑齐清一色听牌,"
-                    mo_list = []
-                    for pai in target['ting']:
-                        mo_list.append(f"{pai}{sp}")
-                    first = True
-                    tot = 0
-                    for k2 in range(k + 1, len(p_mo)):
-                        if p_mo[k2] in mo_list:
-                            if first:
-                                first = False
-                                outputStr += f'\n将第在{k2+1}巡第一次自摸'
-                                tot = 1
-                            else:
-                                tot += 1
-                    outputStr += f'\n听牌列表{mo_list}\n总共自摸{tot}次'
-                    win_list.append((tot, outputStr))
-                break
+                ans = k
+                right = k - 1
+                outputStr = "以下为开局换牌序列"
+                change_cnt = 0
+                for output in change_history:
+                    change_flag = False
+                    outputStr += '\n'
+                    for pai in output:
+                        if sp in pai:
+                            outputStr += f"{pai} "
+                            change_flag = True
+                    outputStr += f"+ 非{sp}" if change_flag else f"非{sp}"
+                    change_cnt += len(output)
+                outputStr += f'\n以下为换完后手牌\n{hand}'
+                outputStr += f'\n以下为听牌时牌型\n{need_raw}'
+                outputStr += f'\n牌山对照: \n{p_mo[:9]}\n{p_mo[9: 18]}\n{p_mo[18: 27]}\n{p_mo[27:]}'
+                outputStr += f"\n将在第{k + 1}巡自摸 {p_mo[k]} 凑齐清一色听牌,"
+                mo_list = []
+                for pai in target['ting']:
+                    mo_list.append(f"{pai}{sp}")
+                first = -1
+                tot = 0
+                for k2 in range(k + 1, len(p_mo)):
+                    if p_mo[k2] in mo_list:
+                        if first < 0:
+                            first = k2 + 1
+                            outputStr += f'\n将第在{k2+1}巡第一次自摸'
+                            tot = 1
+                        else:
+                            tot += 1
+                outputStr += f'\n听牌列表{mo_list}\n总共自摸{tot}次'
+                ans_data = (tot, -change_cnt, -first, outputStr)
+            else:
+                left = k + 1
+        if ans > -1:
+            win_list.append(ans_data)
     win_list.sort(reverse=True)
     idx = 0
     con = 'y'
     while con == 'y':
-        print(win_list[idx][1])
+        print(win_list[idx][-1])
         idx += 1
         con = input('next? y/n : ')
 
