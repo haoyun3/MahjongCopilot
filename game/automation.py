@@ -100,7 +100,7 @@ class Positions:
         (11.5, 3.375),  # Bronze 铜之间
         (11.5, 4.825),  # Silver 银之间
         (11.5, 6.15),  # Gold 金之间
-        (11.5, 5.425),  # Jade 玉之间    滚轮    
+        (11.5, 7.325),  # Jade 玉之间
         (11.5, 6.825),  # Throne 王座之间  滚轮
     ]
 
@@ -870,7 +870,7 @@ class Automation:
         yield ActionStepDelay(random.uniform(0.5, 1.5))
 
         # click on level        
-        if self.st.auto_join_level >= 3:  # jade/throne requires mouse wheel
+        if self.st.auto_join_level >= 4:  # jade/throne requires mouse wheel
             wx, wy = Positions.LEVELS[1]  # wheel at this position
             for step in self.steps_randomized_move(wx, wy):
                 yield step
