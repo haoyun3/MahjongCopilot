@@ -149,7 +149,7 @@ def mode2(p_dora: list, p_hand: list, p_mo: list):
             # print(action_list[-1])
             continue
         else:
-            p_hand.insert(new_pai, 0)
+            p_hand.append(new_pai)
             if pai_count(new_pai, p_hand) == 2:
                 p_finish.append(new_pai)
         flag = False
@@ -253,7 +253,7 @@ def mode3(p_dora: list, p_hand: list, p_mo: list):
             # print(action_list[-1])
             continue
         else:
-            p_hand.insert(new_pai, 0)
+            p_hand.append(new_pai)
             if pai_count(new_pai, p_hand) == 2:
                 p_finish.append(new_pai)
         flag = False
