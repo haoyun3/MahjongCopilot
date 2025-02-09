@@ -435,9 +435,23 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
 
 
 def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list):
+    op = int(input("请选择额外规则:\n"
+                   "0, 无额外规则\n"
+                   "1, 换牌次数不超过3次\n"
+                   "2, 换牌每次最多选3张\n"
+                   "3, 不换牌\n"
+                   "4, 筒子魂牌失效\n"
+                   "请选择 : "))
     data = []
     p_god = pai_get_dora(p_dora)
-
+    if op == 4:
+        cnt = 0
+        while cnt < len(p_god):
+            if 'p' in p_god[cnt]:
+                del p_god[cnt]
+            else:
+                cnt += 1
+                
     def god_dfs(dfs_id: int, ting: str, select: list):
         if len(select) == 6:
             tmp_hand = select.copy() + select.copy()
@@ -457,12 +471,6 @@ def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list):
         if 's' in pai:
             god_dfs(0, pai, [])
 
-    op = int(input("请选择额外规则:\n"
-                   "0, 无额外规则\n"
-                   "1, 换牌次数不超过3次\n"
-                   "2, 换牌每次最多选3张\n"
-                   "3, 不换牌\n"
-                   "请选择 : "))
     c_times = 5
     c_times = c_times if op != 1 else 3
     c_times = c_times if op != 3 else 0
@@ -559,7 +567,7 @@ def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list):
                         outputStr += f"{pai} "
                     change_cnt += len(output)
                 outputStr += f'\n以下为换完后手牌\n{hand}'
-                outputStr += f'\n以下为听牌时牌型\n{need_raw}'
+                outputStr += f'\n以下为听牌时牌型\n{li_pai(need_raw)}'
                 outputStr += f'\n牌山对照: \n{p_mo[:9]}\n{p_mo[9: 18]}\n{p_mo[18: 27]}\n{p_mo[27:]}'
                 outputStr += f"\n将在第{k + 1}巡自摸 {p_mo[k]} 凑齐神域听牌,"
 
