@@ -313,7 +313,7 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
         need_backup = {}
         for pai in need_raw:
             pai_get_num(pai, need_backup, 1)
-        left = 0
+        left = -1
         right = len(p_mo) - 2
         ans = -1
         ans_data = {}
@@ -473,7 +473,7 @@ def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list):
         need_backup = {}
         for pai in need_raw:
             pai_get_num(pai, need_backup, 1)
-        left = 0
+        left = -1
         right = len(p_mo) - 2
         ans = -1
         ans_data = {}
