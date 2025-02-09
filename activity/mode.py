@@ -216,9 +216,6 @@ def mode3(p_dora: list, p_hand: list, p_mo: list):
             ans = left.index(pi) + k if pi in left else 36
         return ans
 
-    ch = p_hand[-1]
-    p_hand.remove(ch)
-    p_mo = [ch] + p_mo[:-1]
     print('牌山对照: ')
     print(p_mo[:9])
     print(p_mo[9: 18])
@@ -283,7 +280,10 @@ def mode3(p_dora: list, p_hand: list, p_mo: list):
         outputMsg = '摸切' if out == new_pai else '手切'
         action_list.append(f"{outputMsg}{out}")
         # print(action_list[-1], p_judge)
-        p_hand.remove(out)
+        try:
+            p_hand.remove(out)
+        except:
+            print('failed to remove: ', out)
     while len(action_list) > 9:
         print(action_list[:9])
         action_list = action_list[9:]
