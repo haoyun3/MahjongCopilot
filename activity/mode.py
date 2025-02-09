@@ -412,10 +412,10 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
                 first = -1
                 tot = 0
                 for k2 in range(k + 1, len(p_mo)):
-                    if p_mo[k2] in mo_list:
+                    if pai_in_which(p_mo[k2], mo_list):
                         if first < 0:
                             first = k2 + 1
-                            outputStr += f'\n将第在{k2+1}巡第一次自摸'
+                            outputStr += f'\n将第在{k2 + 1}巡第一次自摸'
                             tot = 1
                         else:
                             tot += 1
@@ -425,6 +425,163 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
                 left = k + 1
         if ans > -1:
             win_list.append(ans_data)
+    win_list.sort(reverse=True)
+    idx = 0
+    con = 'y'
+    while con == 'y':
+        print(win_list[idx][-1])
+        idx += 1
+        con = input('next? y/n : ')
+
+
+def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list):
+    data = []
+    p_god = pai_get_dora(p_dora)
+
+    def god_dfs(dfs_id: int, ting: str, select: list):
+        if len(select) == 6:
+            tmp_hand = select.copy() + select.copy()
+            tmp_hand.append(ting)
+            data.append({'hand': tmp_hand})
+            return
+        if dfs_id >= len(p_god):
+            return
+        tmp_pai = p_god[dfs_id]
+        if tmp_pai != ting:
+            select.append(tmp_pai)
+            god_dfs(dfs_id + 1, ting, select)
+            select.remove(tmp_pai)
+        god_dfs(dfs_id + 1, ting, select)
+
+    for pai in p_god:
+        if 's' in pai:
+            god_dfs(0, pai, [])
+
+    op = int(input("请选择额外规则:\n"
+                   "0, 无额外规则\n"
+                   "1, 换牌次数不超过3次\n"
+                   "2, 换牌每次最多选3张\n"
+                   "3, 不换牌\n"
+                   "请选择 : "))
+    c_times = 5
+    c_times = c_times if op != 1 else 3
+    c_times = c_times if op != 3 else 0
+
+    win_list = []
+    for target in data:
+        need_raw = target["hand"]
+        need_backup = {}
+        for pai in need_raw:
+            pai_get_num(pai, need_backup, 1)
+        left = 0
+        right = len(p_mo) - 2
+        ans = -1
+        ans_data = {}
+        while left <= right:
+            k = (left + right) // 2
+            need = need_backup.copy()
+            for j in range(k + 1):
+                if pai_in_which(p_mo[j], need):
+                    pai_get_num(p_mo[j], need, -1)
+                    if pai_get_num(p_mo[j], need) == 0:
+                        pai_del_which(p_mo[j], need)
+            flag = True
+            future_raw = {}
+            change_history = []
+            hand = []
+            while flag:
+                hand = p_hand.copy()
+                future = future_raw.copy()
+                flag = False
+                change_history = []
+                backup = []
+                cnt = 0
+                for _ in range(c_times):
+                    change = []
+                    hand_tmp = hand.copy()
+                    for pai in hand_tmp:
+                        if pai_in_which(pai, need):
+                            if pai_in_which(pai, future):
+                                change.append(pai)
+                                hand.remove(pai)
+                                pai_get_num(pai, future, -1)
+                                if pai_get_num(pai, future) == 0:
+                                    pai_del_which(pai, future)
+                                if len(change) >= 3 and op == 2:
+                                    break
+                            else:
+                                tmp = pai_count(pai, hand)
+                                if tmp > pai_get_num(pai, need):
+                                    if pai_in_which(pai, backup):
+                                        tmp2 = min(tmp - pai_get_num(pai, need), pai_count(pai, backup))
+                                        pai_get_num(pai, future_raw, tmp2)
+                                        flag = True
+                                        break
+                                    else:
+                                        change.append(pai)
+                                        hand.remove(pai)
+                                        if len(change) >= 3 and op == 2:
+                                            break
+                        else:
+                            change.append(pai)
+                            hand.remove(pai)
+                            if len(change) >= 3 and op == 2:
+                                break
+                    if flag:
+                        break
+                    backup = hand.copy()
+                    change_history.append(li_pai(change))
+                    flag_break = False
+                    while len(hand) < 13:
+                        hand.append(p_left[cnt])
+                        cnt += 1
+                        if cnt >= len(p_left):
+                            cnt -= len(p_left)
+                            flag_break = True
+                            break
+                    if flag_break:
+                        hand = []
+                        break
+                    hand = li_pai(hand)
+            flag = True
+            for pai in need:
+                if pai_count(pai, hand) < pai_get_num(pai, need):
+                    flag = False
+                    break
+            if flag:
+                ans = k
+                right = k - 1
+                outputStr = "以下为开局换牌序列"
+                change_cnt = 0
+                for output in change_history:
+                    outputStr += '\n'
+                    for pai in output:
+                        outputStr += f"{pai} "
+                    change_cnt += len(output)
+                outputStr += f'\n以下为换完后手牌\n{hand}'
+                outputStr += f'\n以下为听牌时牌型\n{need_raw}'
+                outputStr += f'\n牌山对照: \n{p_mo[:9]}\n{p_mo[9: 18]}\n{p_mo[18: 27]}\n{p_mo[27:]}'
+                outputStr += f"\n将在第{k + 1}巡自摸 {p_mo[k]} 凑齐神域听牌,"
+
+                first = -1
+                tot = 0
+                for k2 in range(k + 1, len(p_mo)):
+                    if pai_in_which(p_mo[k2], p_god):
+                        if first < 0:
+                            first = k2 + 1
+                            outputStr += f'\n将第在{k2 + 1}巡第一次自摸'
+                            tot = 1
+                        else:
+                            tot += 1
+                outputStr += f'\n听牌列表{p_god}\n总共自摸{tot}次'
+                ans_data = (tot, -change_cnt, -first, outputStr)
+            else:
+                left = k + 1
+        if ans > -1:
+            win_list.append(ans_data)
+    if len(win_list) <= 0:
+        print("很遗憾，无法和牌")
+        return
     win_list.sort(reverse=True)
     idx = 0
     con = 'y'
@@ -513,3 +670,25 @@ def pai_del_which(pi: str, which):
             del which[f'0{pi[1]}']
     else:
         del which[pi]
+
+
+def pai_get_dora(p_dora: list):
+    tmp = set()
+    for pai in p_dora:
+        if '0' in pai:
+            tmp.add('5' + pai[1])
+            tmp.add('6' + pai[1])
+        else:
+            tmp.add(pai)
+            if '9' in pai:
+                tmp.add('1' + pai[1])
+            elif 'm' in pai:
+                tmp.add('9m')
+            elif 'z' in pai and pai in ['4z', '7z']:
+                if pai == '4z':
+                    tmp.add('1z')
+                else:
+                    tmp.add('5z')
+            else:
+                tmp.add(f"{int(pai[0]) + 1}{pai[1]}")
+    return list(tmp)

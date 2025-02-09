@@ -1,6 +1,6 @@
 import json
 
-from mode import li_pai, mode1, mode2, mode3, mode_qing
+from mode import li_pai, mode1, mode2, mode3, mode_qing, mode_god
 
 
 def main():
@@ -15,6 +15,7 @@ def main():
                      "3, 不换牌的万象六对子\n"
                      "4, 清一色筒子\n"
                      "5, 清一色索子\n"
+                     "6, 神域单调索子和牌\n"
                      "请输入序号 : "))
     if mode == 1:
         mode1(p_dora, p_hand, p_mo, p_left)
@@ -26,6 +27,8 @@ def main():
         mode_qing(p_dora, p_hand, p_mo, p_left, 'p')
     elif mode == 5:
         mode_qing(p_dora, p_hand, p_mo, p_left, 's')
+    elif mode == 6:
+        mode_god(p_dora, p_hand, p_mo, p_left)
     else:
         print("没做")
 
