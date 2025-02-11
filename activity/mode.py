@@ -57,7 +57,7 @@ def mode1(p_dora: list, p_hand: list, p_mo: list, p_left: list):
                 if flag:
                     break
                 backup = hand.copy()
-                change_history.append(change)
+                change_history.append(li_pai(change))
                 flag_break = False
                 while len(hand) < 13:
                     hand.append(p_left[cnt])
@@ -297,6 +297,7 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
                    "1, 换牌次数不超过3次\n"
                    "2, 换牌每次最多选3张\n"
                    "3, 不换牌\n"
+                   "4, 1~9全包含(荧光带鱼规则)\n"
                    "请选择 : "))
     c_times = 5
     c_times = c_times if op != 1 else 3
@@ -310,6 +311,14 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
         need_raw = []
         for pai in target["hand"]:
             need_raw.append(f"{pai}{sp}")
+        if op == 4:
+            flag = True
+            for i in range(1, 10):
+                if i not in target["hand"]:
+                    flag = False
+                    break
+            if not flag:
+                continue
         need_backup = {}
         for pai in need_raw:
             pai_get_num(pai, need_backup, 1)
