@@ -1,7 +1,7 @@
 import json
 
 
-def mode1(p_dora: list, p_hand: list, p_mo: list, p_left: list):
+def mode1(p_dora: list, p_hand: list, p_mo: list, p_left: list, change_times: int = 5):
     need_raw = ["1m", "9m", "1p", "9p", "1s", "9s",
                 "1z", "2z", "3z", "4z", "5z", "6z", "7z"]
     need = {}
@@ -26,7 +26,7 @@ def mode1(p_dora: list, p_hand: list, p_mo: list, p_left: list):
             change_history = []
             backup = []
             cnt = 0
-            for _ in range(5):
+            for _ in range(change_times):
                 change = []
                 hand_tmp = hand.copy()
                 for pai in hand_tmp:
@@ -291,17 +291,15 @@ def mode3(p_dora: list, p_hand: list, p_mo: list):
     print(li_pai(p_hand))
 
 
-def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
+def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str, change_times: int = 5):
     op = int(input("请选择额外规则:\n"
                    "0, 无额外规则\n"
-                   "1, 换牌次数不超过3次\n"
-                   "2, 换牌每次最多选3张\n"
-                   "3, 不换牌\n"
-                   "4, 1~9全包含(荧光带鱼规则)\n"
+                   "1, 不换牌\n"
+                   "2, 1~9全包含(荧光带鱼规则)\n"
+                   "3, 车轮滚滚规则(没做)\n"
+                   "4, 换牌次数不超过3次\n"
                    "请选择 : "))
-    c_times = 5
-    c_times = c_times if op != 1 else 3
-    c_times = c_times if op != 3 else 0
+    c_times = change_times if op != 1 else 0
     with open("D:/Data/majong_qing.txt", "r", encoding='utf-8') as f:
         data = json.loads(f.read())["data"]
     win_list = []
@@ -311,7 +309,7 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
         need_raw = []
         for pai in target["hand"]:
             need_raw.append(f"{pai}{sp}")
-        if op == 4:
+        if op == 2:
             flag = True
             for i in range(1, 10):
                 if i not in target["hand"]:
@@ -356,8 +354,6 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
                                 pai_get_num(pai, future, -1)
                                 if pai_get_num(pai, future) == 0:
                                     pai_del_which(pai, future)
-                                if len(change) >= 3 and op == 2:
-                                    break
                             else:
                                 tmp = pai_count(pai, hand)
                                 if tmp > pai_get_num(pai, need):
@@ -369,35 +365,37 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
                                     else:
                                         change.append(pai)
                                         hand.remove(pai)
-                                        if len(change) >= 3 and op == 2:
-                                            break
                         else:
                             change.append(pai)
                             hand.remove(pai)
-                            if len(change) >= 3 and op == 2:
-                                break
                     if flag:
                         break
                     backup = hand.copy()
-                    change_history.append(li_pai(change))
+                    change = li_pai(change)
+                    change_history.append(change.copy())
                     flag_break = False
-                    while len(hand) < 13:
-                        hand.append(p_left[cnt])
-                        cnt += 1
-                        if cnt >= len(p_left):
-                            cnt -= len(p_left)
-                            flag_break = True
-                            break
+                    tmp_cnt = 0
+                    while change:
+                        tmp_cnt += 1
+                        if tmp_cnt >= 3 and op == 4:
+                            hand.append(change[0])
+                        else:
+                            hand.append(p_left[cnt])
+                            cnt += 1
+                            if cnt >= len(p_left):
+                                cnt -= len(p_left)
+                                flag_break = True
+                                break
+                        del change[0]
                     if flag_break:
                         hand = []
                         break
                     hand = li_pai(hand)
-            flag = True
+            success = 0
             for pai in need:
                 if pai_count(pai, hand) < pai_get_num(pai, need):
-                    flag = False
-                    break
-            if flag:
+                    success += pai_get_num(pai, need) - pai_count(pai, hand)
+            if success <= 13 - len(p_hand):
                 ans = k
                 right = k - 1
                 outputStr = "以下为开局换牌序列"
@@ -411,13 +409,27 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
                             change_flag = True
                     outputStr += f"+ 非{sp}" if change_flag else f"非{sp}"
                     change_cnt += len(output)
+                mo_list = []
+                hand_ting = []
+                if len(p_hand) == 13:
+                    for pai in target['ting']:
+                        mo_list.append(f"{pai}{sp}")
+                    hand_ting = need_raw
+                elif len(p_hand) == 12:
+                    no = ""
+                    for pai in need:
+                        if pai_count(pai, hand) < pai_get_num(pai, need):
+                            no = pai
+                            break
+                    hand_ting = need_raw.copy()
+                    hand_ting.remove(no)
+                    mo_list = get_ting_list(hand_ting)
+
                 outputStr += f'\n以下为换完后手牌\n{hand}'
-                outputStr += f'\n以下为听牌时牌型\n{need_raw}'
+                outputStr += f'\n以下为听牌时牌型\n{hand_ting}'
                 outputStr += f'\n牌山对照: \n{p_mo[:9]}\n{p_mo[9: 18]}\n{p_mo[18: 27]}\n{p_mo[27:]}'
                 outputStr += f"\n将在第{k + 1}巡自摸 {p_mo[k]} 凑齐清一色听牌,"
-                mo_list = []
-                for pai in target['ting']:
-                    mo_list.append(f"{pai}{sp}")
+
                 first = -1
                 tot = 0
                 for k2 in range(k + 1, len(p_mo)):
@@ -443,12 +455,12 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str):
         con = input('next? y/n : ')
 
 
-def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list):
+def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list, change_times: int = 5):
     op = int(input("请选择额外规则:\n"
                    "0, 无额外规则\n"
-                   "1, 换牌次数不超过3次\n"
+                   "1, 不换牌\n"
                    "2, 换牌每次最多选3张\n"
-                   "3, 不换牌\n"
+                   "3, \n"
                    "4, 筒子魂牌失效\n"
                    "请选择 : "))
     data = []
@@ -480,9 +492,7 @@ def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list):
         if 's' in pai:
             god_dfs(0, pai, [])
 
-    c_times = 5
-    c_times = c_times if op != 1 else 3
-    c_times = c_times if op != 3 else 0
+    c_times = change_times if op != 1 else 0
 
     win_list = []
     for target in data:
@@ -524,8 +534,6 @@ def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list):
                                 pai_get_num(pai, future, -1)
                                 if pai_get_num(pai, future) == 0:
                                     pai_del_which(pai, future)
-                                if len(change) >= 3 and op == 2:
-                                    break
                             else:
                                 tmp = pai_count(pai, hand)
                                 if tmp > pai_get_num(pai, need):
@@ -537,25 +545,27 @@ def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list):
                                     else:
                                         change.append(pai)
                                         hand.remove(pai)
-                                        if len(change) >= 3 and op == 2:
-                                            break
                         else:
                             change.append(pai)
                             hand.remove(pai)
-                            if len(change) >= 3 and op == 2:
-                                break
                     if flag:
                         break
                     backup = hand.copy()
                     change_history.append(li_pai(change))
                     flag_break = False
-                    while len(hand) < 13:
-                        hand.append(p_left[cnt])
-                        cnt += 1
-                        if cnt >= len(p_left):
-                            cnt -= len(p_left)
-                            flag_break = True
-                            break
+                    tmp_cnt = 0
+                    while change:
+                        tmp_cnt += 1
+                        if tmp_cnt >= 3 and op == 4:
+                            hand.append(change[0])
+                        else:
+                            hand.append(p_left[cnt])
+                            cnt += 1
+                            if cnt >= len(p_left):
+                                cnt -= len(p_left)
+                                flag_break = True
+                                break
+                        del change[0]
                     if flag_break:
                         hand = []
                         break
@@ -709,3 +719,68 @@ def pai_get_dora(p_dora: list):
             else:
                 tmp.add(f"{int(pai[0]) + 1}{pai[1]}")
     return list(tmp)
+
+
+def pai_equal(pai1, pai2) -> bool:
+    pai1 = f"5{pai1[1]}" if '0' in pai1 else pai1
+    pai2 = f"5{pai1[1]}" if '0' in pai2 else pai2
+    return pai1 == pai2
+
+
+def get_ting_list(p_hand: list):
+    hand = []
+    for pai in p_hand:
+        i = int(pai[0])
+        i = 5 if i == 0 else i
+        hand.append(i)
+
+    def dfs2(b: list):
+        if len(b) == 0:
+            return True
+        flag = False
+        if b.count(b[0]) >= 3:
+            tmp = b.copy()
+            tmp.remove(b[0])
+            tmp.remove(b[0])
+            tmp.remove(b[0])
+            flag |= dfs2(tmp)
+        if b.count(b[0] + 1) and b.count(b[0] + 2):
+            tmp = b.copy()
+            tmp.remove(b[0])
+            tmp.remove(b[0] + 1)
+            tmp.remove(b[0] + 2)
+            flag |= dfs2(tmp)
+        return flag
+
+    def check():
+        win = 0
+        win_list = []
+        for t in range(1, 10):
+            if hand.count(t) < 4:
+                a = hand.copy()
+                a.append(t)
+                a.sort()
+                for tou in range(1, 10):
+                    if a.count(tou) >= 2:
+                        b = a.copy()
+                        b.remove(tou)
+                        b.remove(tou)
+                        if dfs2(b):
+                            win += 1
+                            win_list.append(t)
+                            break
+        return win_list
+
+    ans_list = set()
+    for c in range(1, 10):
+        if hand.count(c) < 4:
+            hand.append(c)
+            result = check()
+            del hand[-1]
+            for pai in result:
+                ans_list.add(pai)
+    sp = p_hand[0][1]
+    mo_list = []
+    for pai in ans_list:
+        mo_list.append(f"{pai}{sp}")
+    return ans_list

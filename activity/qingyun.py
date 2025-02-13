@@ -4,7 +4,7 @@ from mode import li_pai, mode1, mode2, mode3, mode_qing, mode_god
 
 
 def main():
-    p_dora, p_hand, p_mo, p_left = pai_shan()
+    p_dora, p_hand, p_mo, p_left, change_times = pai_shan()
     print("宝牌指示牌:", p_dora)
     print("理牌手牌:", li_pai(p_hand))
     print("牌河待摸牌", p_mo)
@@ -18,17 +18,17 @@ def main():
                      "6, 神域单调索子和牌\n"
                      "请输入序号 : "))
     if mode == 1:
-        mode1(p_dora, p_hand, p_mo, p_left)
+        mode1(p_dora, p_hand, p_mo, p_left, change_times)
     elif mode == 2:
         mode2(p_dora, p_hand, p_mo)
     elif mode == 3:
         mode3(p_dora, p_hand, p_mo)
     elif mode == 4:
-        mode_qing(p_dora, p_hand, p_mo, p_left, 'p')
+        mode_qing(p_dora, p_hand, p_mo, p_left, 'p', change_times)
     elif mode == 5:
-        mode_qing(p_dora, p_hand, p_mo, p_left, 's')
+        mode_qing(p_dora, p_hand, p_mo, p_left, 's', change_times)
     elif mode == 6:
-        mode_god(p_dora, p_hand, p_mo, p_left)
+        mode_god(p_dora, p_hand, p_mo, p_left, change_times)
     else:
         print("没做")
 
@@ -39,6 +39,7 @@ def pai_shan():
     pool = data['pool']
     dora = data['dora']
     hand = data['hands']
+    change_times = data['remainChangeTileCount']
     p_dora = []
     for pai in dora:
         for a in pool:
@@ -60,7 +61,7 @@ def pai_shan():
                 p_mo.append(pai['tile'])
             else:
                 p_left.append(pai['tile'])
-    return p_dora, p_hand, p_mo, p_left
+    return p_dora, p_hand, p_mo, p_left, change_times
 
 
 # 按装订区域中的绿色按钮以运行脚本。
