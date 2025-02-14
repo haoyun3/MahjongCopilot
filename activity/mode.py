@@ -441,7 +441,7 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str, cha
                         else:
                             tot += 1
                 outputStr += f'\n听牌列表{mo_list}\n总共自摸{tot}次'
-                ans_data = (tot, -change_cnt, -first, outputStr)
+                ans_data = (tot, -first, -change_cnt, outputStr)
             else:
                 left = k + 1
         if ans > -1:
