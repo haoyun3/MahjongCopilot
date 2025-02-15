@@ -426,7 +426,8 @@ class BotManager:
                         data = liqimsg.get('data')
                         if 'huResult' in data:
                             # 胡牌，此时刷新下一关商店
-                            save_data('refresh', {"goods": data['shop']['goods'], "effect": data['effectList']})
+                            save_data('refresh', {"goods": data['upgradeResult']['shop']['goods'],
+                                                  "effect": data['gameUpdate']['effectList']})
                     elif (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityRefreshShop'):
                         # 商店刷新
                         data = liqimsg.get('data')
