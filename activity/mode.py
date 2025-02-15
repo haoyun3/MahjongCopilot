@@ -304,7 +304,7 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str, cha
         data = json.loads(f.read())["data"]
     win_list = []
     for target in data:
-        if len(win_list) > 1000:
+        if len(win_list) > 2000:
             break
         need_raw = []
         for pai in target["hand"]:

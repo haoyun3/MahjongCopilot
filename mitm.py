@@ -11,6 +11,7 @@ from mitmproxy.tools.dump import DumpMaster
 import common.utils as utils
 from common.utils import Folder
 from common.log_helper import LOGGER
+from activity.qingyun_parse import qingyun_modify
 
 class WsType:
     """ websocket msg type"""
@@ -64,6 +65,7 @@ class WSDataInterceptor:
     def websocket_message(self, flow:HTTPFlow):
         """ ws message handler"""
         msg = flow.websocket.messages[-1]
+        # msg.content = qingyun_modify(msg.content)
         if self.allow_url(flow.request.pretty_url):
             self.message_queue.put(WSMessage(flow.id, msg.timestamp, msg.content))
         

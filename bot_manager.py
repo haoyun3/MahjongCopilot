@@ -9,6 +9,7 @@ import time
 import queue
 import threading
 
+from activity.qingyun_statistic import save_data
 from activity import run_interactive_program
 from game.browser import GameBrowser
 from game.game_state import GameState
@@ -40,7 +41,7 @@ class BotManager:
         self.game_state:GameState = None
 
         self.liqi_parser = liqi.LiqiProto()
-        self.mitm_server:mitm.MitmController = mitm.MitmController()      # no domain restrictions for now
+        self.mitm_server: mitm.MitmController = mitm.MitmController()      # no domain restrictions for now
         self.proxy_injector = proxinject.ProxyInjector()
         self.browser = GameBrowser(self.st.browser_width, self.st.browser_height)
         self.automation = Automation(self.browser, self.st)
@@ -411,13 +412,33 @@ class BotManager:
                     print(liqi_method, "data = ", liqimsg.get('data'))
                     print('\n\n======================================\n\n')
                     if (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityFetchInfo'):
+                        # 打开青云之志
                         with open("D:/Data/maj_input.txt", "w", encoding='utf-8') as f:
                             f.write(json.dumps(liqimsg["data"]["data"]["game"]))
                         run_interactive_program("qingyun")
                     elif (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityUpgrade'):
+                        # 新的一关开始
                         with open("D:/Data/maj_input.txt", "w", encoding='utf-8') as f:
                             f.write(json.dumps(liqimsg["data"]["game"]))
                         run_interactive_program("qingyun")
+                    elif (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityOperate'):
+                        # 对局内操作一次
+                        data = liqimsg.get('data')
+                        if 'huResult' in data:
+                            # 胡牌，此时刷新下一关商店
+                            save_data('refresh', {"goods": data['shop']['goods'], "effect": data['effectList']})
+                    elif (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityRefreshShop'):
+                        # 商店刷新
+                        data = liqimsg.get('data')
+                        save_data('refresh', {"goods": data['shop']['goods'], "effect": data['effectList']})
+                    elif (liqi_type, liqi_method) == (liqi.MsgType.REQ, '.lq.Lobby.amuletActivityBuy'):
+                        # 买了哪个卡包
+                        save_data('buy_pre', liqimsg.get('data'))
+                    elif (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityBuy'):
+                        # 读取商店列表及卡包开出内容
+                        data = liqimsg.get('data')
+                        save_data('buy', {"shop": data['shop'], "effect": data['effectList']})
+
             else:
                 LOGGER.debug('Other msg (ignored): %s', liqimsg)
                 
