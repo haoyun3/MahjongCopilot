@@ -35,6 +35,9 @@ except:
             "gold": {
                 'total': 0,
             },
+            "gold-glasses": {
+                'total': 0,
+            },
             "legend": {
                 'total': 0,
             },
