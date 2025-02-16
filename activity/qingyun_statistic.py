@@ -180,7 +180,7 @@ def save_data(action: str, msg: dict):
             cnt[good['goodsId'] - 101] += 1
         rtype = 'normal'
         for effect in msg['effect']:
-            if effect['id'] == 1660:
+            if effect['id'] == 1660 or effect['id'] == 1661:
                 rtype = 'super'
         data[action][rtype]['total'] += 1
         data[action][rtype]['green'] += cnt[0]
@@ -205,12 +205,15 @@ def save_data(action: str, msg: dict):
                 r2 = name_list[k]["rarity"]
                 data["packs"][rarity][r2] += 1
                 flag = True
+                only_glasses = r2 == 2
                 for ex in msg['effect']:
                     if ex['id'] % 10 == 1:
                         k2 = str(ex['id'] - 1)
                         if k2 in name_list:
                             if name_list[k2]['rarity'] == r2:
                                 flag = False
+                                if k2 != '1660':
+                                    only_glasses = False
                         else:
                             flag = False
                 if flag:
@@ -219,10 +222,16 @@ def save_data(action: str, msg: dict):
                     else:
                         data['cards'][rarity_list[r2]][k] = 1
                     data['cards'][rarity_list[r2]]['total'] += 1
+                elif only_glasses:
+                    if k in data['cards']['gold-glasses']:
+                        data['cards']['gold-glasses'][k] += 1
+                    else:
+                        data['cards']['gold-glasses'][k] = 1
+                    data['cards']['gold-glasses']['total'] += 1
             else:
                 print("!!!!!!!!!!!!!!!!!!!!!!!")
                 print(f"new Effect: {effect}")
                 print("!!!!!!!!!!!!!!!!!!!!!!!")
 
     with open("D:/data/qingyun_statistic.txt", "w", encoding='utf-8') as f_write:
-        f_write.write(json.dumps(data, indent=4))
+        f_write.write(json.dumps(data, indent=4, sort_keys=True))
