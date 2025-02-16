@@ -228,10 +228,6 @@ def save_data(action: str, msg: dict):
                     else:
                         data['cards']['gold-glasses'][k] = 1
                     data['cards']['gold-glasses']['total'] += 1
-            else:
-                print("!!!!!!!!!!!!!!!!!!!!!!!")
-                print(f"new Effect: {effect}")
-                print("!!!!!!!!!!!!!!!!!!!!!!!")
 
     with open("D:/data/qingyun_statistic.txt", "w", encoding='utf-8') as f_write:
         f_write.write(json.dumps(data, indent=4, sort_keys=True))
