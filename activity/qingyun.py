@@ -1,6 +1,6 @@
 import json
 
-from mode import li_pai, mode1, mode2, mode3, mode_qing, mode_god
+from qingyun_mode import li_pai, mode1, mode2, mode3, mode_qing, mode_god
 
 
 def main():

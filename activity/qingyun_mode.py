@@ -407,8 +407,8 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str, cha
                         if sp in pai:
                             outputStr += f"{pai} "
                             change_flag = True
+                            change_cnt += 1
                     outputStr += f"+ 非{sp}" if change_flag else f"非{sp}"
-                    change_cnt += len(output)
                 mo_list = []
                 hand_ting = []
                 if len(p_hand) == 13:
