@@ -408,19 +408,19 @@ class BotManager:
                     'Lobby msg(suppressed): id=%s, type=%s, method=%s, len=%d',
                     liqi_id, liqi_type, liqi_method, len(str(liqimsg)))
                 if '.lq.Lobby.amulet' in liqi_method:
-                    print('\n\n======================================\n\n')
-                    print(liqi_method, "data = ", liqimsg.get('data'))
-                    print('\n\n======================================\n\n')
+                    # print('\n\n======================================\n\n')
+                    # print(liqi_method, "data = ", liqimsg.get('data'))
+                    # print('\n\n======================================\n\n')
                     if (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityFetchInfo'):
                         # 打开青云之志
                         with open("D:/Data/maj_input.txt", "w", encoding='utf-8') as f:
                             f.write(json.dumps(liqimsg["data"]["data"]["game"]))
-                        run_interactive_program("qingyun")
+                        run_interactive_program("qingyun_helper")
                     elif (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityUpgrade'):
                         # 新的一关开始
                         with open("D:/Data/maj_input.txt", "w", encoding='utf-8') as f:
                             f.write(json.dumps(liqimsg["data"]["game"]))
-                        run_interactive_program("qingyun")
+                        run_interactive_program("qingyun_helper")
                     elif (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityOperate'):
                         # 对局内操作一次
                         data = liqimsg.get('data')

@@ -4,10 +4,11 @@ left = []
 hand = []
 dora = []
 cnt = 49
+cnt2 = 36
 
 
 def init():
-    global left, hand, dora
+    global left, hand, dora, cnt2
     print("神域青云之志遍历助手v1.0  ------   by 扫地机\n\n")
     print("输入格式均为类似 1919m114p514s1234z类似的格式\n"
           "顺序没要求，不识别区分0p请写5p")
@@ -17,7 +18,14 @@ def init():
     for k in r:
         for i in range(len(k) - 1):
             raw_dora.append(f"{k[i]}{k[-1]}")
+    if len(raw_dora) != 10:
+        str_input = input("检测到宝牌指示牌不等于10张，请补充输入，如果确认无误请直接回车:\n")
+        r = re.findall(r"\d*[mpsz]", str_input)
+        for k in r:
+            for i in range(len(k) - 1):
+                raw_dora.append(f"{k[i]}{k[-1]}")
     dora = pai_get_dora(raw_dora)
+    dora = li_pai(dora)
     for pai in dora:
         left.append(pai)
         left.append(pai)
@@ -31,10 +39,19 @@ def init():
     r = re.findall(r"\d*[mpsz]", str_input)
     for k in r:
         for i in range(len(k) - 1):
+            cnt2 -= 1
             pai = f"{k[i]}{k[-1]}"
             if pai in left:
                 left.remove(pai)
-    str_input = input("请输入手牌:\n")
+    str_input = input(f"牌河目前还有{cnt2}暗牌，请补充输入牌河明牌，如果确认无误可直接回车:\n")
+    r = re.findall(r"\d*[mpsz]", str_input)
+    for k in r:
+        for i in range(len(k) - 1):
+            cnt2 -= 1
+            pai = f"{k[i]}{k[-1]}"
+            if pai in left:
+                left.remove(pai)
+    str_input = input("请输入手牌(不影响牌统计，只是检测不合法，不用可直接回车):\n")
     r = re.findall(r"\d*[mpsz]", str_input)
     for k in r:
         for i in range(len(k) - 1):
@@ -59,7 +76,8 @@ def main():
                 throw.append(pai)
         cnt -= len(throw)
         backup = hand.copy()
-        str_input = input("请输入换完后手牌:\n")
+        hand = []
+        str_input = input("请输入换完后手牌(不影响牌统计，只是检测不合法，不用可直接回车):\n")
         r = re.findall(r"\d*[mpsz]", str_input)
         for k in r:
             for i in range(len(k) - 1):
@@ -135,12 +153,13 @@ def print_dora():
             outputStr_s += pai[0]
         elif 'z' in pai:
             outputStr_z += pai[0]
+    print(f"神域有效牌{len(dora)}种: {dora}")
     print(f"剩余可换出神域牌\n{outputStr_m}m\n{outputStr_p}p\n{outputStr_s}s\n{outputStr_z}z\n")
 
 
 def print_helper():
     print_dora()
-    global cnt, left, hand
+    global cnt, left, hand, cnt2
 
     helperStr1 = "七对子辅助:\n"
     p1 = []
@@ -179,7 +198,7 @@ def print_helper():
     for pai in hand:
         if pai not in dora:
             outputStr += ' ' + pai
-    print(f"剩余{cnt}张待换牌, 及牌河暗牌, 剩余有效牌{len(left)}张")
+    print(f"剩余{cnt}张待换牌, 及{cnt2}张牌河暗牌, 剩余有效牌包括手牌在内有{len(left)}张")
     print(helperStr1)
     print(helperStr2)
     print(outputStr)
