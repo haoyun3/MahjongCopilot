@@ -296,7 +296,7 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str, cha
                    "0, 无额外规则\n"
                    "1, 不换牌\n"
                    "2, 1~9全包含(荧光带鱼规则)\n"
-                   "3, 车轮滚滚规则(没做)\n"
+                   "3, 暗刻次数优先(车轮滚滚规则)\n"
                    "4, 换牌次数不超过3次\n"
                    "请选择 : "))
     c_times = change_times if op != 1 else 0
@@ -432,8 +432,11 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str, cha
 
                 first = -1
                 tot = 0
+                roll_cnt = 0
                 for k2 in range(k + 1, len(p_mo)):
                     if pai_in_which(p_mo[k2], mo_list):
+                        if op == 3:
+                            roll_cnt += check_anke(hand_ting, p_mo[k2])
                         if first < 0:
                             first = k2 + 1
                             outputStr += f'\n将第在{k2 + 1}巡第一次自摸'
@@ -441,7 +444,10 @@ def mode_qing(p_dora: list, p_hand: list, p_mo: list, p_left: list, sp: str, cha
                         else:
                             tot += 1
                 outputStr += f'\n听牌列表{mo_list}\n总共自摸{tot}次'
-                ans_data = (tot, -first, -change_cnt, outputStr)
+                if op == 3:
+                    ans_data = (roll_cnt, -change_cnt, -first, outputStr)
+                else:
+                    ans_data = (tot, -change_cnt, -first, outputStr)
             else:
                 left = k + 1
         if ans > -1:
@@ -459,13 +465,13 @@ def mode_god(p_dora: list, p_hand: list, p_mo: list, p_left: list, change_times:
     op = int(input("请选择额外规则:\n"
                    "0, 无额外规则\n"
                    "1, 不换牌\n"
-                   "2, 换牌每次最多选3张\n"
+                   "2, 筒子魂牌失效\n"
                    "3, \n"
-                   "4, 筒子魂牌失效\n"
+                   "4, 换牌每次最多选3张\n"
                    "请选择 : "))
     data = []
     p_god = pai_get_dora(p_dora)
-    if op == 4:
+    if op == 2:
         cnt = 0
         while cnt < len(p_god):
             if 'p' in p_god[cnt]:
@@ -784,3 +790,45 @@ def get_ting_list(p_hand: list):
     for pai in ans_list:
         mo_list.append(f"{pai}{sp}")
     return ans_list
+
+
+def check_anke(p_hand: list, last: str) -> int:
+    def dfs(b: list, tot: int):
+        if len(b) == 0:
+            return tot
+        tmp_tot = -1
+        if b.count(b[0]) >= 3:
+            tmp2 = b.copy()
+            tmp2.remove(b[0])
+            tmp2.remove(b[0])
+            tmp2.remove(b[0])
+            tmp_tot = dfs(tmp2, tot + 1)
+        if b.count(b[0] + 1) and b.count(b[0] + 2):
+            tmp2 = b.copy()
+            tmp2.remove(b[0])
+            tmp2.remove(b[0] + 1)
+            tmp2.remove(b[0] + 2)
+            tmp_res = dfs(tmp2, tot)
+            if tmp_res < tmp_tot or tmp_tot == -1:
+                tmp_tot = tmp_res
+        return tmp_tot
+
+    hand = p_hand.copy()
+    sp = last[1]
+    if '0' in last:
+        last = f"5{sp}"
+    hand.append(last)
+    hand = li_pai(hand)
+    new_hand = []
+    for pai in hand:
+        new_hand.append(int(pai[0]))
+    ans = 10
+    for i in range(1, 10):
+        if new_hand.count(i) >= 2:
+            tmp = new_hand.copy()
+            tmp.remove(i)
+            tmp.remove(i)
+            res = dfs(tmp, 0)
+            if 0 <= res < ans:
+                ans = res
+    return ans
