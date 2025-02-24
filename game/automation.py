@@ -331,7 +331,6 @@ class Automation:
             self._task.stop()
             self._task = None
 
-
     def can_automate(self, cancel_on_running: bool = False, limit_state: UiState = None) -> bool:
         """return True if automation conditions met """
         if not self.st.enable_automation:  # automation not enabled
@@ -439,6 +438,97 @@ class Automation:
         )
         self._task = AutomationTask(self.executor, f"Auto_{mjai_type}_{pai}", desc)
         self._task.start_action_steps(action_steps, game_state)
+        return True
+
+    def automate_qingyun_action(self, qingyun_data: dict) -> bool:
+        """ execute action given by the mjai message
+        params:
+            mjai_action(dict): mjai output action msg
+            game_state(GameState): game state object
+        Returns:
+            bool: True means automation kicks off. False means not automating."""
+        print("qingyun_automation_debug")
+        if not self.can_automate():
+            return False
+        if qingyun_data is None:
+            return False
+
+        self.stop_previous()
+        qingyun_method = qingyun_data['method'][16:]
+        qingyun_data = qingyun_data['data']
+        print("method:", qingyun_method)
+
+        if qingyun_method == 'ActivityStartGame':
+            effects = qingyun_data['game']['freeEffectList']
+            select = -1
+            if 1460 in effects:
+                select = effects.index(1460)
+            elif 620 in effects:
+                select = effects.index(620)
+            elif 1470 in effects:
+                select = effects.index(1470)
+            more_steps: list[ActionStep] = []
+            if select >= 0:
+                x, y = 4.0 + 5.0 * select, 7.25  # 选择需要的护身符
+                more_steps.append(ActionStepDelay(1))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                x, y = 0.6, 0.5  # 返回
+                more_steps.append(ActionStepDelay(2))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                x, y = 6.6, 5.7  # 确认返回
+                more_steps.append(ActionStepDelay(1))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                x, y = 0.6, 0.5  # 返回
+                more_steps.append(ActionStepDelay(1.5))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                x, y = 15.4, 5.2  # 青云之志再进入
+                more_steps.append(ActionStepDelay(7))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                x, y = 8.0, 7.8  # 继续游戏
+                more_steps.append(ActionStepDelay(6))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+            else:
+                x, y = 4.0, 7.25  # 选择第一个
+                more_steps.append(ActionStepDelay(1))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                x, y = 0.6, 0.5  # 返回
+                more_steps.append(ActionStepDelay(2))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                x, y = 6.6, 5.7  # 确认返回
+                more_steps.append(ActionStepDelay(1))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                x, y = 10.4, 7.8  # 放弃
+                more_steps.append(ActionStepDelay(1.5))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                x, y = 6.6, 5.7  # 确认放弃
+                more_steps.append(ActionStepDelay(1))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                x, y = 8.0, 7.8  # 新的开始
+                more_steps.append(ActionStepDelay(1.2))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+
+        else:
+            LOGGER.error("No automation for unrecognized qingyun type: %s", qingyun_method)
+            return False
+
+        delay = 0.5  # initial delay
+        action_steps: list[ActionStep] = [ActionStepDelay(delay)]
+        action_steps.extend(more_steps)
+        desc = f"Automating action {qingyun_method}"
+        self._task = AutomationTask(self.executor, f"Auto_{qingyun_method}", desc)
+        self._task.start_action_steps(action_steps)
         return True
 
     def randomize_action(self, action: dict, gi: GameInfo) -> dict:

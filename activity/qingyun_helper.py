@@ -51,6 +51,7 @@ def init():
             pai = f"{k[i]}{k[-1]}"
             if pai in left:
                 left.remove(pai)
+    print_helper()
     str_input = input("请输入手牌(不影响牌统计，只是检测不合法，不用可直接回车):\n")
     r = re.findall(r"\d*[mpsz]", str_input)
     for k in r:
@@ -64,7 +65,6 @@ def main():
     init()
     global left, hand, cnt, dora
     for _ in range(8):
-        print_helper()
         throw = []
         str_input = input("请输入要换掉的牌:\n")
         r = re.findall(r"\d*[mpsz]", str_input)
@@ -76,6 +76,7 @@ def main():
                 throw.append(pai)
         cnt -= len(throw)
         backup = hand.copy()
+        print_helper()
         hand = []
         str_input = input("请输入换完后手牌(不影响牌统计，只是检测不合法，不用可直接回车):\n")
         r = re.findall(r"\d*[mpsz]", str_input)
@@ -154,7 +155,7 @@ def print_dora():
         elif 'z' in pai:
             outputStr_z += pai[0]
     print(f"神域有效牌{len(dora)}种: {dora}")
-    print(f"剩余可换出神域牌\n{outputStr_m}m\n{outputStr_p}p\n{outputStr_s}s\n{outputStr_z}z\n")
+    print(f"剩余可换出神域牌(手牌+可换牌+暗牌，已去掉牌河明牌)\n{outputStr_m}m\n{outputStr_p}p\n{outputStr_s}s\n{outputStr_z}z\n")
 
 
 def print_helper():
@@ -201,6 +202,7 @@ def print_helper():
     print(f"剩余{cnt}张待换牌, 及{cnt2}张牌河暗牌, 剩余有效牌包括手牌在内有{len(left)}张")
     print(helperStr1)
     print(helperStr2)
+    print(f"有效神域牌:{dora}")
     print(outputStr)
 
 

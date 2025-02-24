@@ -58,7 +58,9 @@ class BotManager:
         self.mitm_proxinject_need_update:bool = False    # set this True to update mitm and prox inject in main thread
         self.is_loading_bot:bool = False                # is bot being loaded
         self.main_thread_exception:Exception = None     # Exception that had stopped the main thread
-        self.game_exception:Exception = None            # game run time error (but does not break main thread)        
+        self.game_exception:Exception = None            # game run time error (but does not break main thread)
+
+        self.qingyun_automation: bool = False
         
         
     def start(self):
@@ -408,20 +410,25 @@ class BotManager:
                     'Lobby msg(suppressed): id=%s, type=%s, method=%s, len=%d',
                     liqi_id, liqi_type, liqi_method, len(str(liqimsg)))
                 if '.lq.Lobby.amulet' in liqi_method:
-                    # print('\n\n======================================\n\n')
-                    # print(liqi_method, "data = ", liqimsg.get('data'))
-                    # print('\n\n======================================\n\n')
+                    print('\n\n======================================\n\n')
+                    print(liqi_method, "data = ", liqimsg.get('data'))
+                    print('\n\n======================================\n\n')
                     if (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityFetchInfo'):
                         # 打开青云之志
-                        with open("D:/Data/maj_input.txt", "w", encoding='utf-8') as f:
-                            f.write(json.dumps(liqimsg["data"]["data"]["game"]))
-                        run_interactive_program("qingyun_helper")
+                        if 'game' in liqimsg["data"]["data"]:
+                            with open("D:/Data/maj_input.txt", "w", encoding='utf-8') as f:
+                                f.write(json.dumps(liqimsg["data"]["data"]["game"]))
+                            if not self.qingyun_automation:
+                                run_interactive_program("qingyun")
                     elif (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityUpgrade'):
                         # 新的一关开始
                         with open("D:/Data/maj_input.txt", "w", encoding='utf-8') as f:
                             f.write(json.dumps(liqimsg["data"]["game"]))
-                        run_interactive_program("qingyun_helper")
-                    elif (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityOperate'):
+                        if not self.qingyun_automation:
+                            run_interactive_program("qingyun")
+
+                    # 数据统计
+                    if (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityOperate'):
                         # 对局内操作一次
                         data = liqimsg.get('data')
                         if 'huResult' in data:
@@ -440,6 +447,18 @@ class BotManager:
                         data = liqimsg.get('data')
                         save_data('buy', {"shop": data['shop'], "effect": data['effectList']})
 
+                    # 自动化刷初始
+                    if not self.qingyun_automation:
+                        if (liqi_type, liqi_method) == (liqi.MsgType.RES, '.lq.Lobby.amuletActivityStartGame'):
+                            print("\nswitch qingyun_automation to True\n")
+                            self.qingyun_automation = True
+
+                    if self.qingyun_automation:
+                        if liqi_type == liqi.MsgType.RES:
+                            if liqi_method in [
+                                '.lq.Lobby.amuletActivityStartGame',
+                            ]:
+                                self._do_qingyun_automation(liqimsg)
             else:
                 LOGGER.debug('Other msg (ignored): %s', liqimsg)
                 
@@ -531,6 +550,17 @@ class BotManager:
         
         try:
             self.automation.automate_action(reaction, self.game_state)
+        except Exception as e:
+            LOGGER.error("Failed to automate action for %s: %s", reaction['type'], e, exc_info=True)
+
+
+    def _do_qingyun_automation(self, reaction: dict):
+        # auto play given mjai reaction
+        if not reaction:  # no reaction given
+            return False
+
+        try:
+            self.automation.automate_qingyun_action(reaction)
         except Exception as e:
             LOGGER.error("Failed to automate action for %s: %s", reaction['type'], e, exc_info=True)
 
