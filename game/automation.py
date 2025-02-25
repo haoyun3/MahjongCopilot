@@ -22,6 +22,22 @@ from common.utils import UiState, GAME_MODES
 from .img_proc import ImgTemp, GameVisual
 from .browser import GameBrowser
 from .game_state import GameInfo, GameState
+from activity.qingyun_automation import get_helper, get_helper_dahai
+from activity.qingyun_statistic import name_list as rarity_list
+
+priority_buy = [
+    1690, 1630, 1670, 150, 700,  # 万象，函，白夜，天恩，岚星
+    1660, 1640, 740, 40, 440,  # 墨镜, 发明家，油桶，闪闪，提灯
+    1010, 1650, 1460, 620, 1470,  # 烟花小贩, 明珠，车轮滚滚，汪多鱼，荧光带鱼
+]
+priority_sell = [
+    1670, 1640, 700, 150, 1660,  # 白夜，发明家，岚星，天恩，墨镜
+    1010, 40, 440, 740, 1630,  # 烟花小贩，闪闪，提灯，油桶，函
+]
+priority_sell2 = [
+    1470, 620, 1460, 1650,  # 荧光带鱼，汪多鱼，车轮滚滚，明珠
+    1471, 621, 1461, 1651,  # 荧光带鱼，汪多鱼，车轮滚滚，明珠
+]
 
 
 class Positions:
@@ -304,6 +320,10 @@ class Automation:
         self.ui_state: UiState = UiState.NOT_RUNNING  # Where game UI is at. initially not running
 
         self.last_emoji_time: float = 0.0  # timestamp of last emoji sent
+        self.qingyun_changeList = []
+        self.qingyun_target = []
+        self.qingyun_hu = []
+        self.qingyun_coin = 0
 
     def is_running_execution(self):
         """ if task is still running"""
@@ -454,11 +474,11 @@ class Automation:
             return False
 
         self.stop_previous()
-        qingyun_method = qingyun_data['method'][16:]
+        qingyun_method = qingyun_data['method'][24:]
         qingyun_data = qingyun_data['data']
         print("method:", qingyun_method)
 
-        if qingyun_method == 'ActivityStartGame':
+        if qingyun_method == 'StartGame':
             effects = qingyun_data['game']['freeEffectList']
             select = -1
             if 1460 in effects:
@@ -477,19 +497,12 @@ class Automation:
                 more_steps.append(ActionStepDelay(2))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
-                x, y = 6.6, 5.7  # 确认返回
-                more_steps.append(ActionStepDelay(1))
-                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
-                more_steps.append(ActionStepClick())
+                more_steps.extend(self.steps_confirm())
                 x, y = 0.6, 0.5  # 返回
                 more_steps.append(ActionStepDelay(1.5))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
                 x, y = 15.4, 5.2  # 青云之志再进入
-                more_steps.append(ActionStepDelay(7))
-                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
-                more_steps.append(ActionStepClick())
-                x, y = 8.0, 7.8  # 继续游戏
                 more_steps.append(ActionStepDelay(6))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
@@ -499,25 +512,194 @@ class Automation:
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
                 x, y = 0.6, 0.5  # 返回
-                more_steps.append(ActionStepDelay(2))
+                more_steps.append(ActionStepDelay(1.6))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
-                x, y = 6.6, 5.7  # 确认返回
-                more_steps.append(ActionStepDelay(1))
-                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
-                more_steps.append(ActionStepClick())
+                more_steps.extend(self.steps_confirm())
                 x, y = 10.4, 7.8  # 放弃
                 more_steps.append(ActionStepDelay(1.5))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
-                x, y = 6.6, 5.7  # 确认放弃
-                more_steps.append(ActionStepDelay(1))
-                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
-                more_steps.append(ActionStepClick())
+                more_steps.extend(self.steps_confirm())
                 x, y = 8.0, 7.8  # 新的开始
                 more_steps.append(ActionStepDelay(1.2))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
+        elif qingyun_method == 'FetchInfo':
+            more_steps: list[ActionStep] = []
+            x, y = 8.0, 7.8  # 继续游戏
+            more_steps.append(ActionStepDelay(5))
+            more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+            more_steps.append(ActionStepClick())
+            # x, y = 0.3, 4.9  # 打开自动和牌
+            # more_steps.append(ActionStepDelay(2))
+            # more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+            # more_steps.append(ActionStepClick())
+            self.qingyun_changeList, self.qingyun_target, self.qingyun_hu = get_helper(qingyun_data['data']['game'])
+            more_steps.append(ActionStepDelay(2))
+            more_steps.extend(self.steps_qingyun_change())  # 选择要换的牌
+            x, y = 10.3, 6.9  # 换牌！
+            more_steps.append(ActionStepDelay(1))
+            more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+            more_steps.append(ActionStepClick())
+        elif qingyun_method == 'ChangeHands':
+            more_steps: list[ActionStep] = []
+            if self.qingyun_changeList:
+                more_steps.append(ActionStepDelay(2))
+                more_steps.extend(self.steps_qingyun_change())  # 选择要换的牌
+                x, y = 10.3, 6.9  # 换牌！
+                more_steps.append(ActionStepDelay(0.5))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+        elif qingyun_method == 'Operate':
+            more_steps: list[ActionStep] = []
+            if 'huResult' not in qingyun_data:
+                idx = get_helper_dahai(qingyun_data['gameUpdate'], self.qingyun_target, self.qingyun_hu)
+                more_steps.append(ActionStepDelay(1.1))
+                if idx > -1:
+                    more_steps.extend(self.steps_dahai(idx, True))
+                else:
+                    if idx == -1:
+                        x, y = 10.3, 6.9  # 自摸！
+                    else:
+                        x, y = 8.0, 6.9  # 自摸！（有杠按钮）
+                    more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                    more_steps.append(ActionStepClick())
+                    pass
+            else:
+                x, y = 0.6, 0.5  # 返回
+                more_steps.append(ActionStepDelay(2))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                more_steps.extend(self.steps_confirm())
+                x, y = 8.0, 7.8  # 继续游戏
+                more_steps.append(ActionStepDelay(2))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                more_steps.append(ActionStepDelay(2))
+                shop = qingyun_data['upgradeResult']['shop']
+                flag = True
+                for good in shop['goods']:
+                    if good['goodsId'] != 102 and not good['sold']:
+                        more_steps.extend(self.steps_buy(good['id']))
+                        flag = False
+                        break
+                if flag:
+                    x, y = 8.0, 7.8  # 刷新商店
+                    more_steps.append(ActionStepDelay(5))
+                    more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                    more_steps.append(ActionStepClick())
+                    more_steps.extend(self.steps_confirm())
+        elif qingyun_method == 'Buy':
+            more_steps: list[ActionStep] = []
+            self.qingyun_coin = qingyun_data['coin']
+            effects = qingyun_data['shop']['effectList']
+            pri = []
+            for e in effects:
+                if e in priority_buy:
+                    if e == 1630 or e == 1690:
+                        pri.append(priority_buy.index(e))
+                    else:
+                        flag = False
+                        for eff in qingyun_data['effectList']:
+                            if eff['id'] == e:
+                                flag = True
+                                break
+                        pri.append(100 if flag else priority_buy.index(e))
+                else:
+                    pri.append(100 - rarity_list[str(e)]['rarity'])
+            srt = pri.copy()
+            srt.sort()
+            select = pri.index(srt[0])
+            x, y = 4.0 + 5.0 * select, 8.0
+            more_steps.append(ActionStepDelay(2))
+            more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+            more_steps.append(ActionStepClick())
+        elif qingyun_method == 'SelectPack' or qingyun_method == 'RefreshShop' or qingyun_method == 'SellEffect':
+            more_steps: list[ActionStep] = [ActionStepDelay(1.3)]
+            if 'coin' in qingyun_data:
+                self.qingyun_coin = qingyun_data['coin']
+                print(f'更新金币为{self.qingyun_coin}')
+            op = 0  # 0, nothing to buy; 1, buy one; 2, need sell for space or money; 3: 卖掉傻逼公子
+            effects = qingyun_data['effectList']
+            g_idx = -1
+            for e in range(len(effects)):
+                idx = effects[e]['id']
+                if idx % 2 == 1:
+                    idx -= 1
+                if idx == 1690:
+                    print('已经刷出万象天引')
+                    return True
+                elif idx not in priority_buy:
+                    g_idx = e
+                    break
+            if g_idx >= 0:
+                print('卖无关人员')
+                more_steps.extend(self.steps_sell(len(effects) - g_idx - 1))
+            else:
+                if len(effects) < 8:
+                    print('尝试买包')
+                    for good in qingyun_data['shop']['goods']:
+                        if good['goodsId'] != 102 and not good['sold']:
+                            if good['price'] <= self.qingyun_coin:
+                                more_steps.extend(self.steps_buy((good['id'] - 1) % 5 + 1))
+                                op = 1
+                                break
+                            else:
+                                op = 2
+                                break
+                else:
+                    op = 2
+                if op == 0:
+                    print('尝试刷新商店')
+                    if self.qingyun_coin >= qingyun_data['shop']['refreshPrice']:
+                        x, y = 8.0, 7.8  # 刷新商店
+                        more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                        more_steps.append(ActionStepClick())
+                        more_steps.extend(self.steps_confirm())
+                    else:
+                        op = 2
+                if op == 2:
+                    print('不够钱，要卖包')
+                    # 只会存在需求的卡，不需求的卡早就卖了
+                    if len(effects) > 0:
+                        money_card = []
+                        for e in range(len(effects)):
+                            idx = effects[e]['id']
+                            if idx in priority_sell2:
+                                money_card.append(effects[e]['id'])
+                        if len(money_card) >= 2:
+                            sell = []
+                            for e in money_card:
+                                sell.append(priority_sell2.index(e))
+                            srt = sell.copy()
+                            srt.sort()
+                            card = money_card[sell.index(srt[0])]
+                            for e in range(len(effects)):
+                                if effects[e]['id'] == card:
+                                    idx = len(effects) - e - 1
+                                    break
+                            more_steps.extend(self.steps_sell(idx))
+                        else:
+                            sell = []
+                            for e in range(len(effects)):
+                                idx = effects[e]['id']
+                                if idx % 2 == 1:
+                                    idx -= 1
+                                if idx in priority_sell:
+                                    sell.append(priority_sell.index(idx))
+                                else:
+                                    sell.append(100)
+                            srt = sell.copy()
+                            srt.sort()
+                            idx = len(effects) - sell.index(srt[0]) - 1
+                            if srt[0] == 100:
+                                more_steps.extend(self.steps_restart())
+                            else:
+                                more_steps.extend(self.steps_sell(idx))
+                    else:
+                        print('完全没钱，要重开了')
+                        more_steps.extend(self.steps_restart())
 
         else:
             LOGGER.error("No automation for unrecognized qingyun type: %s", qingyun_method)
@@ -530,6 +712,86 @@ class Automation:
         self._task = AutomationTask(self.executor, f"Auto_{qingyun_method}", desc)
         self._task.start_action_steps(action_steps)
         return True
+
+    def steps_qingyun_change(self) -> list[ActionStep]:
+        ans: list[ActionStep] = []
+        if self.qingyun_changeList:
+            ch = self.qingyun_changeList[0]
+            del self.qingyun_changeList[0]
+            for idx in ch:
+                ans.extend(self.steps_dahai(idx))
+                ans.append(ActionStepDelay(0.18))
+        return ans
+
+    def steps_dahai(self, idx: int, double: bool = False) -> list[ActionStep]:
+        ans: list[ActionStep] = []
+        if idx < 13:
+            x, y = 2.1 + 0.8 * idx, 8.4  # 继续游戏
+        else:
+            x, y = 12.6, 8.4  # 继续游戏
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        if double:
+            ans.append(ActionStepDelay(0.3))
+        ans.append(ActionStepClick())
+        if double:
+            ans.append(ActionStepDelay(0.1))
+            ans.append(ActionStepClick())
+        return ans
+
+    def steps_confirm(self):
+        ans: list[ActionStep] = []
+        x, y = 6.6, 5.7  # 确认
+        ans.append(ActionStepDelay(0.7))
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepClick())
+        return ans
+
+    def steps_buy(self, idx: int):
+        ans: list[ActionStep] = []
+        if idx % 2 == 1:
+            x, y = 6.9 + (idx // 2) * 2.9, 5.2
+        else:
+            x, y = 5.4 + (idx // 2) * 2.9, 6.3
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepDelay(0.1))
+        ans.append(ActionStepClick())
+        x += 1.6
+        y -= 1.7
+        ans.append(ActionStepDelay(0.4))
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepDelay(0.1))
+        ans.append(ActionStepClick())
+        return ans
+
+    def steps_sell(self, idx: int):
+        ans: list[ActionStep] = []
+        x, y = 14.4 - 1.3 * idx, 2.4
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepDelay(0.1))
+        ans.append(ActionStepClick())
+        x, y = 8.9, 7.3
+        ans.append(ActionStepDelay(0.7))
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepDelay(0.1))
+        ans.append(ActionStepClick())
+        return ans
+
+    def steps_restart(self):
+        ans = [ActionStepDelay(0.1)]
+        x, y = 0.6, 0.5  # 返回
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepClick())
+        ans.extend(self.steps_confirm())
+        x, y = 10.4, 7.8  # 放弃
+        ans.append(ActionStepDelay(1.5))
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepClick())
+        ans.extend(self.steps_confirm())
+        x, y = 8.0, 7.8  # 新的开始
+        ans.append(ActionStepDelay(1.2))
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepClick())
+        return ans
 
     def randomize_action(self, action: dict, gi: GameInfo) -> dict:
         """ Randomize ai choice: pick according to probaility from top 3 options"""
