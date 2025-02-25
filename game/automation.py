@@ -27,16 +27,18 @@ from activity.qingyun_statistic import name_list as rarity_list
 
 priority_buy = [
     1690, 1630, 1670, 150, 700,  # 万象，函，白夜，天恩，岚星
-    1660, 1640, 740, 40, 440,  # 墨镜, 发明家，油桶，闪闪，提灯
-    1010, 1650, 1460, 620, 1470,  # 烟花小贩, 明珠，车轮滚滚，汪多鱼，荧光带鱼
+    1660, 740,  # 墨镜, 油桶
+]
+priority_buy2 = [
+    40, 440, 1010, 1460, 620, 1470,  # 闪闪，提灯，烟花小贩，车轮滚滚，汪多鱼，荧光带鱼
 ]
 priority_sell = [
-    1670, 1640, 700, 150, 1660,  # 白夜，发明家，岚星，天恩，墨镜
-    1010, 40, 440, 740, 1630,  # 烟花小贩，闪闪，提灯，油桶，函
+    1670, 700, 1010, 40, 440,  # 白夜，岚星，烟花小贩，闪闪，提灯
+    150, 1660, 740, 1630,  # 天恩，墨镜，油桶，函
 ]
 priority_sell2 = [
-    1470, 620, 1460, 1650,  # 荧光带鱼，汪多鱼，车轮滚滚，明珠
-    1471, 621, 1461, 1651,  # 荧光带鱼，汪多鱼，车轮滚滚，明珠
+    1470, 620, 1460,  # 荧光带鱼，汪多鱼，车轮滚滚，
+    1471, 621, 1461,  # 荧光带鱼，汪多鱼，车轮滚滚
 ]
 
 
@@ -483,10 +485,10 @@ class Automation:
             select = -1
             if 1460 in effects:
                 select = effects.index(1460)
-            elif 620 in effects:
-                select = effects.index(620)
             elif 1470 in effects:
                 select = effects.index(1470)
+            elif 620 in effects:
+                select = effects.index(620)
             more_steps: list[ActionStep] = []
             if select >= 0:
                 x, y = 4.0 + 5.0 * select, 7.25  # 选择需要的护身符
@@ -596,18 +598,30 @@ class Automation:
             effects = qingyun_data['shop']['effectList']
             pri = []
             for e in effects:
-                if e in priority_buy:
-                    if e == 1630 or e == 1690:
-                        pri.append(priority_buy.index(e))
-                    else:
-                        flag = False
-                        for eff in qingyun_data['effectList']:
-                            if eff['id'] == e:
-                                flag = True
-                                break
-                        pri.append(100 if flag else priority_buy.index(e))
+                if e == 1630 or e == 1690:
+                    pri.append(priority_buy.index(e))
                 else:
-                    pri.append(100 - rarity_list[str(e)]['rarity'])
+                    hasOne = False
+                    for eff in qingyun_data['effectList']:
+                        if eff['id'] == e:
+                            hasOne = True
+                            break
+                    if hasOne:
+                        pri.append(101)
+                    elif e in priority_buy:
+                        pri.append(priority_buy.index(e))
+                    elif e in priority_buy2:
+                        flag = True
+                        r = rarity_list[str(e)]['rarity']
+                        for e2 in effects:
+                            if r < rarity_list[str(e2)]['rarity']:
+                                flag = False
+                        if flag:
+                            pri.append(20 + priority_buy2.index(e))
+                        else:
+                            pri.append(100 - rarity_list[str(e)]['rarity'])
+                    else:
+                        pri.append(100 - rarity_list[str(e)]['rarity'])
             srt = pri.copy()
             srt.sort()
             select = pri.index(srt[0])
@@ -630,7 +644,7 @@ class Automation:
                 if idx == 1690:
                     print('已经刷出万象天引')
                     return True
-                elif idx not in priority_buy:
+                elif idx not in priority_buy and idx not in priority_buy2:
                     g_idx = e
                     break
             if g_idx >= 0:
@@ -640,7 +654,7 @@ class Automation:
                 if len(effects) < 8:
                     print('尝试买包')
                     for good in qingyun_data['shop']['goods']:
-                        if good['goodsId'] != 102 and not good['sold']:
+                        if good['goodsId'] == 103 and not good['sold']:
                             if good['price'] <= self.qingyun_coin:
                                 more_steps.extend(self.steps_buy((good['id'] - 1) % 5 + 1))
                                 op = 1
@@ -648,6 +662,16 @@ class Automation:
                             else:
                                 op = 2
                                 break
+                    if op == 0:
+                        for good in qingyun_data['shop']['goods']:
+                            if good['goodsId'] == 101 and not good['sold']:
+                                if good['price'] <= self.qingyun_coin:
+                                    more_steps.extend(self.steps_buy((good['id'] - 1) % 5 + 1))
+                                    op = 1
+                                    break
+                                else:
+                                    op = 2
+                                    break
                 else:
                     op = 2
                 if op == 0:
