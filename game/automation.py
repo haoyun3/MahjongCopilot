@@ -490,7 +490,13 @@ class Automation:
             elif 620 in effects:
                 select = effects.index(620)
             more_steps: list[ActionStep] = []
-            if select >= 0:
+            bossBuff = qingyun_data['game']['bossBuff'][0]
+            if bossBuff == 911:
+                x, y = 4.0, 7.25  # 选择第一个
+                more_steps.append(ActionStepDelay(1))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+            elif select >= 0 and bossBuff not in [905, 906, 910]:
                 x, y = 4.0 + 5.0 * select, 7.25  # 选择需要的护身符
                 more_steps.append(ActionStepDelay(1))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
@@ -598,7 +604,10 @@ class Automation:
             effects = qingyun_data['shop']['effectList']
             pri = []
             for e in effects:
-                if e == 1630 or e == 1690:
+                if e == 1690:
+                    print('已经刷出万象天引')
+                    return True
+                elif e == 1630:
                     pri.append(priority_buy.index(e))
                 else:
                     hasOne = False
@@ -651,6 +660,7 @@ class Automation:
                 print('卖无关人员')
                 more_steps.extend(self.steps_sell(len(effects) - g_idx - 1))
             else:
+                need = 0
                 if len(effects) < 8:
                     print('尝试买包')
                     for good in qingyun_data['shop']['goods']:
@@ -661,6 +671,7 @@ class Automation:
                                 break
                             else:
                                 op = 2
+                                need = 15
                                 break
                     if op == 0:
                         for good in qingyun_data['shop']['goods']:
@@ -671,6 +682,7 @@ class Automation:
                                     break
                                 else:
                                     op = 2
+                                    need = 5
                                     break
                 else:
                     op = 2
@@ -683,6 +695,11 @@ class Automation:
                         more_steps.extend(self.steps_confirm())
                     else:
                         op = 2
+                        extra_need = 15
+                        for eff in effects:
+                            if eff['id'] == 1630:
+                                extra_need = 5
+                        need = qingyun_data['shop']['refreshPrice'] + extra_need
                 if op == 2:
                     print('不够钱，要卖包')
                     # 只会存在需求的卡，不需求的卡早就卖了
@@ -705,6 +722,7 @@ class Automation:
                                     break
                             more_steps.extend(self.steps_sell(idx))
                         else:
+                            can_earn = 0
                             sell = []
                             for e in range(len(effects)):
                                 idx = effects[e]['id']
@@ -712,12 +730,17 @@ class Automation:
                                     idx -= 1
                                 if idx in priority_sell:
                                     sell.append(priority_sell.index(idx))
+                                    can_earn += rarity_list[str(idx)]['rarity'] * 3 + 3
                                 else:
                                     sell.append(100)
                             srt = sell.copy()
                             srt.sort()
                             idx = len(effects) - sell.index(srt[0]) - 1
-                            if srt[0] == 100:
+                            if can_earn < need:
+                                print('卖完剩一张资源卡也不够钱，要重开了')
+                                more_steps.extend(self.steps_restart())
+                            elif srt[0] == 100:
+                                print('剩一张资源卡，要重开了')
                                 more_steps.extend(self.steps_restart())
                             else:
                                 more_steps.extend(self.steps_sell(idx))
