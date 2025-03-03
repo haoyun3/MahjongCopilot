@@ -730,13 +730,16 @@ class Automation:
                                     idx -= 1
                                 if idx in priority_sell:
                                     sell.append(priority_sell.index(idx))
-                                    can_earn += rarity_list[str(idx)]['rarity'] * 3 + 3
+                                    if idx == 1670:
+                                        can_earn += 50
+                                    else:
+                                        can_earn += rarity_list[str(idx)]['rarity'] * 3 + 3
                                 else:
                                     sell.append(100)
                             srt = sell.copy()
                             srt.sort()
                             idx = len(effects) - sell.index(srt[0]) - 1
-                            if can_earn < need:
+                            if can_earn + self.qingyun_coin < need:
                                 print('卖完剩一张资源卡也不够钱，要重开了')
                                 more_steps.extend(self.steps_restart())
                             elif srt[0] == 100:
