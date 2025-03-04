@@ -491,18 +491,13 @@ class Automation:
                 select = effects.index(620)
             more_steps: list[ActionStep] = []
             bossBuff = qingyun_data['game']['bossBuff'][0]
-            if bossBuff == 911:
-                x, y = 4.0, 7.25  # 选择第一个
-                more_steps.append(ActionStepDelay(1))
-                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
-                more_steps.append(ActionStepClick())
-            elif select >= 0 and bossBuff not in [905, 906, 910]:
+            if select >= 0 and bossBuff not in [905, 906, 910]:
                 x, y = 4.0 + 5.0 * select, 7.25  # 选择需要的护身符
-                more_steps.append(ActionStepDelay(1))
+                more_steps.append(ActionStepDelay(0.8))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
                 x, y = 0.6, 0.5  # 返回
-                more_steps.append(ActionStepDelay(2))
+                more_steps.append(ActionStepDelay(1.3))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
                 more_steps.extend(self.steps_confirm())
@@ -511,16 +506,16 @@ class Automation:
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
                 x, y = 15.4, 5.2  # 青云之志再进入
-                more_steps.append(ActionStepDelay(6))
+                more_steps.append(ActionStepDelay(5))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
             else:
                 x, y = 4.0, 7.25  # 选择第一个
-                more_steps.append(ActionStepDelay(1))
+                more_steps.append(ActionStepDelay(0.8))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
                 x, y = 0.6, 0.5  # 返回
-                more_steps.append(ActionStepDelay(1.6))
+                more_steps.append(ActionStepDelay(1.3))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
                 more_steps.extend(self.steps_confirm())
@@ -536,7 +531,7 @@ class Automation:
         elif qingyun_method == 'FetchInfo':
             more_steps: list[ActionStep] = []
             x, y = 8.0, 7.8  # 继续游戏
-            more_steps.append(ActionStepDelay(5))
+            more_steps.append(ActionStepDelay(4))
             more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
             more_steps.append(ActionStepClick())
             # x, y = 0.3, 4.9  # 打开自动和牌
@@ -594,7 +589,6 @@ class Automation:
                         break
                 if flag:
                     x, y = 8.0, 7.8  # 刷新商店
-                    more_steps.append(ActionStepDelay(5))
                     more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                     more_steps.append(ActionStepClick())
                     more_steps.extend(self.steps_confirm())
