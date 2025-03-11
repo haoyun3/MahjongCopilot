@@ -1,7 +1,9 @@
 import json
 
+file = "D:/data/qingyun_statistic1.txt"
+
 try:
-    with open("D:/data/qingyun_statistic.txt", "r", encoding='utf-8') as f_open:
+    with open(file, "r", encoding='utf-8') as f_open:
         data = json.loads(f_open.read())
 except:
     data = {
@@ -26,12 +28,6 @@ except:
             "gold": [0, 0, 0, 0],
         },
         "cards": {
-            'green': {
-                'total': 0,
-            },
-            'blue': {
-                'total': 0,
-            },
             "gold": {
                 'total': 0,
             },
@@ -219,18 +215,19 @@ def save_data(action: str, msg: dict):
                                     only_glasses = False
                         else:
                             flag = False
-                if flag:
-                    if k in data['cards'][rarity_list[r2]]:
-                        data['cards'][rarity_list[r2]][k] += 1
-                    else:
-                        data['cards'][rarity_list[r2]][k] = 1
-                    data['cards'][rarity_list[r2]]['total'] += 1
-                elif only_glasses:
-                    if k in data['cards']['gold-glasses']:
-                        data['cards']['gold-glasses'][k] += 1
-                    else:
-                        data['cards']['gold-glasses'][k] = 1
-                    data['cards']['gold-glasses']['total'] += 1
+                if r2 >= 2:
+                    if flag:
+                        if k in data['cards'][rarity_list[r2]]:
+                            data['cards'][rarity_list[r2]][k] += 1
+                        else:
+                            data['cards'][rarity_list[r2]][k] = 1
+                        data['cards'][rarity_list[r2]]['total'] += 1
+                    elif only_glasses:
+                        if k in data['cards']['gold-glasses']:
+                            data['cards']['gold-glasses'][k] += 1
+                        else:
+                            data['cards']['gold-glasses'][k] = 1
+                        data['cards']['gold-glasses']['total'] += 1
 
-    with open("D:/data/qingyun_statistic.txt", "w", encoding='utf-8') as f_write:
+    with open(file, "w", encoding='utf-8') as f_write:
         f_write.write(json.dumps(data, indent=4, sort_keys=True))

@@ -539,7 +539,7 @@ class Automation:
             # more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
             # more_steps.append(ActionStepClick())
             self.qingyun_changeList, self.qingyun_target, self.qingyun_hu = get_helper(qingyun_data['data']['game'])
-            more_steps.append(ActionStepDelay(2))
+            more_steps.append(ActionStepDelay(1.5))
             more_steps.extend(self.steps_qingyun_change())  # 选择要换的牌
             x, y = 10.3, 6.9  # 换牌！
             more_steps.append(ActionStepDelay(1))
@@ -548,10 +548,10 @@ class Automation:
         elif qingyun_method == 'ChangeHands':
             more_steps: list[ActionStep] = []
             if self.qingyun_changeList:
-                more_steps.append(ActionStepDelay(2))
+                more_steps.append(ActionStepDelay(1.5))
                 more_steps.extend(self.steps_qingyun_change())  # 选择要换的牌
                 x, y = 10.3, 6.9  # 换牌！
-                more_steps.append(ActionStepDelay(0.5))
+                more_steps.append(ActionStepDelay(0.3))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
         elif qingyun_method == 'Operate':
@@ -571,15 +571,15 @@ class Automation:
                     pass
             else:
                 x, y = 0.6, 0.5  # 返回
-                more_steps.append(ActionStepDelay(2))
+                more_steps.append(ActionStepDelay(1.5))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
                 more_steps.extend(self.steps_confirm())
                 x, y = 8.0, 7.8  # 继续游戏
-                more_steps.append(ActionStepDelay(2))
+                more_steps.append(ActionStepDelay(1.5))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
-                more_steps.append(ActionStepDelay(2))
+                more_steps.append(ActionStepDelay(1.5))
                 shop = qingyun_data['upgradeResult']['shop']
                 flag = True
                 for good in shop['goods']:
@@ -629,11 +629,11 @@ class Automation:
             srt.sort()
             select = pri.index(srt[0])
             x, y = 4.0 + 5.0 * select, 8.0
-            more_steps.append(ActionStepDelay(2))
+            more_steps.append(ActionStepDelay(1.8))
             more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
             more_steps.append(ActionStepClick())
         elif qingyun_method == 'SelectPack' or qingyun_method == 'RefreshShop' or qingyun_method == 'SellEffect':
-            more_steps: list[ActionStep] = [ActionStepDelay(1.3)]
+            more_steps: list[ActionStep] = [ActionStepDelay(1.1)]
             if 'coin' in qingyun_data:
                 self.qingyun_coin = qingyun_data['coin']
                 print(f'更新金币为{self.qingyun_coin}')
@@ -764,7 +764,7 @@ class Automation:
             del self.qingyun_changeList[0]
             for idx in ch:
                 ans.extend(self.steps_dahai(idx))
-                ans.append(ActionStepDelay(0.18))
+                ans.append(ActionStepDelay(0.1))
         return ans
 
     def steps_dahai(self, idx: int, double: bool = False) -> list[ActionStep]:
@@ -775,7 +775,7 @@ class Automation:
             x, y = 12.6, 8.4  # 继续游戏
         ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
         if double:
-            ans.append(ActionStepDelay(0.3))
+            ans.append(ActionStepDelay(0.1))
         ans.append(ActionStepClick())
         if double:
             ans.append(ActionStepDelay(0.1))
@@ -785,7 +785,7 @@ class Automation:
     def steps_confirm(self):
         ans: list[ActionStep] = []
         x, y = 6.6, 5.7  # 确认
-        ans.append(ActionStepDelay(0.7))
+        ans.append(ActionStepDelay(0.5))
         ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
         ans.append(ActionStepClick())
         return ans
@@ -814,10 +814,23 @@ class Automation:
         ans.append(ActionStepDelay(0.1))
         ans.append(ActionStepClick())
         x, y = 8.9, 7.3
-        ans.append(ActionStepDelay(0.7))
+        ans.append(ActionStepDelay(0.6))
         ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
         ans.append(ActionStepDelay(0.1))
         ans.append(ActionStepClick())
+
+        # 经常出问题，在这里重复一遍，后面正常有动作会打断不受影响，没打断则重复
+        ans.append(ActionStepDelay(8))
+        x, y = 14.4 - 1.3 * idx, 2.4
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepDelay(0.1))
+        ans.append(ActionStepClick())
+        x, y = 8.9, 7.3
+        ans.append(ActionStepDelay(0.6))
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepDelay(0.1))
+        ans.append(ActionStepClick())
+
         return ans
 
     def steps_restart(self):
@@ -827,12 +840,12 @@ class Automation:
         ans.append(ActionStepClick())
         ans.extend(self.steps_confirm())
         x, y = 10.4, 7.8  # 放弃
-        ans.append(ActionStepDelay(1.5))
+        ans.append(ActionStepDelay(1.2))
         ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
         ans.append(ActionStepClick())
         ans.extend(self.steps_confirm())
         x, y = 8.0, 7.8  # 新的开始
-        ans.append(ActionStepDelay(1.2))
+        ans.append(ActionStepDelay(0.9))
         ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
         ans.append(ActionStepClick())
         return ans
