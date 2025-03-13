@@ -528,6 +528,23 @@ class Automation:
                 more_steps.append(ActionStepDelay(1.2))
                 more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
                 more_steps.append(ActionStepClick())
+
+                # 防止卡住
+                more_steps.append(ActionStepDelay(3))
+                x, y = 0.6, 0.5  # 返回
+                more_steps.append(ActionStepDelay(1.3))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                more_steps.extend(self.steps_confirm())
+                x, y = 10.4, 7.8  # 放弃
+                more_steps.append(ActionStepDelay(1.5))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
+                more_steps.extend(self.steps_confirm())
+                x, y = 8.0, 7.8  # 新的开始
+                more_steps.append(ActionStepDelay(1.2))
+                more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
+                more_steps.append(ActionStepClick())
         elif qingyun_method == 'FetchInfo':
             more_steps: list[ActionStep] = []
             x, y = 8.0, 7.8  # 继续游戏
