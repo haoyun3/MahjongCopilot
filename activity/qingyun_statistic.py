@@ -1,6 +1,6 @@
 import json
 
-file = "D:/data/qingyun_statistic1.txt"
+file = "D:/data/qingyun_statistic.txt"
 
 try:
     with open(file, "r", encoding='utf-8') as f_open:

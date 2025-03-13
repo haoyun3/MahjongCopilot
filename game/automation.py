@@ -31,14 +31,22 @@ priority_buy = [
 ]
 priority_buy2 = [
     40, 440, 1010, 1460, 620, 1470,  # 闪闪，提灯，烟花小贩，车轮滚滚，汪多鱼，荧光带鱼
+    1640, 1650, 120, 1050, 1320, 290, 90,  # 未来, 耀眼明珠, 绩效, 钦差, 有失有得, 美玉，能者多劳
 ]
 priority_sell = [
+    1320, 290, 90, 1050, 1640, 120, 1650,  # 有失有得, 美玉，能者多劳, 钦差, 未来, 绩效, 耀眼明珠,
     1670, 700, 1010, 40, 440,  # 白夜，岚星，烟花小贩，闪闪，提灯
     150, 1660, 740, 1630,  # 天恩，墨镜，油桶，函
 ]
 priority_sell2 = [
     1470, 620, 1460,  # 荧光带鱼，汪多鱼，车轮滚滚，
     1471, 621, 1461,  # 荧光带鱼，汪多鱼，车轮滚滚
+]
+ban_card = [
+    1480, 1550,  # 公子，琳琅
+]
+can_upgrade = [
+    1630, 1010,  # 邀请函, 烟花小贩
 ]
 
 
@@ -345,7 +353,7 @@ class Automation:
         """ stop previous task execution if it is still running"""
         if self.is_running_execution():
             LOGGER.info("Stopping previous action: %s", self._task.name)
-            match = re.search(r"pon|kan|chi", self._task.name)
+            match = re.search(r"pon|kan|chi|Buy", self._task.name)
             if match:
                 LOGGER.info("task is %s, delay until finish", self._task.name)
                 while self.is_running_execution():
@@ -621,14 +629,7 @@ class Automation:
                 elif e == 1630:
                     pri.append(priority_buy.index(e))
                 else:
-                    hasOne = False
-                    for eff in qingyun_data['effectList']:
-                        if eff['id'] == e:
-                            hasOne = True
-                            break
-                    if hasOne:
-                        pri.append(101)
-                    elif e in priority_buy:
+                    if e in priority_buy:
                         pri.append(priority_buy.index(e))
                     elif e in priority_buy2:
                         flag = True
@@ -645,8 +646,19 @@ class Automation:
             srt = pri.copy()
             srt.sort()
             select = pri.index(srt[0])
-            x, y = 4.0 + 5.0 * select, 8.0
+            sid = effects[select]
+            hasOne = -1
+            if sid not in can_upgrade:
+                for e in range(len(qingyun_data['effectList'])):
+                    idx = qingyun_data['effectList'][e]['id']
+                    if idx - 1 <= sid <= idx:
+                        hasOne = e
+                        break
             more_steps.append(ActionStepDelay(1.8))
+            if hasOne >= 0:
+                print("已有卡牌不升级，先卖")
+                more_steps.extend(self.steps_sell2(hasOne))
+            x, y = 4.0 + 5.0 * select, 8.0
             more_steps.append(ActionStepMove(x * self.scaler, y * self.scaler))
             more_steps.append(ActionStepClick())
         elif qingyun_method == 'SelectPack' or qingyun_method == 'RefreshShop' or qingyun_method == 'SellEffect':
@@ -656,22 +668,17 @@ class Automation:
                 print(f'更新金币为{self.qingyun_coin}')
             op = 0  # 0, nothing to buy; 1, buy one; 2, need sell for space or money; 3: 卖掉傻逼公子
             effects = qingyun_data['effectList']
-            g_idx = -1
+            ban_id = -1
             for e in range(len(effects)):
-                idx = effects[e]['id']
-                if idx % 2 == 1:
-                    idx -= 1
-                if idx == 1690:
+                if effects[e]['id'] == 1690:
                     print('已经刷出万象天引')
                     return True
-                elif idx not in priority_buy and idx not in priority_buy2:
-                    g_idx = e
-                    break
-            if g_idx >= 0:
-                print('卖无关人员')
-                more_steps.extend(self.steps_sell(len(effects) - g_idx - 1))
+                if effects[e]['id'] in ban_card:
+                    ban_id = e
+            if ban_id >= 0:
+                more_steps.extend(self.steps_sell(len(effects) - ban_id - 1))
             else:
-                need = 0
+                need = 5
                 if len(effects) < 8:
                     print('尝试买包')
                     for good in qingyun_data['shop']['goods']:
@@ -713,53 +720,58 @@ class Automation:
                         need = qingyun_data['shop']['refreshPrice'] + extra_need
                 if op == 2:
                     print('不够钱，要卖包')
-                    # 只会存在需求的卡，不需求的卡早就卖了
-                    if len(effects) > 0:
-                        money_card = []
+                    if len(effects) > 1:
+                        # 卖无关人人员
+                        other = -1
+                        value = -6
                         for e in range(len(effects)):
                             idx = effects[e]['id']
-                            if idx in priority_sell2:
-                                money_card.append(effects[e]['id'])
-                        if len(money_card) >= 2:
-                            sell = []
-                            for e in money_card:
-                                sell.append(priority_sell2.index(e))
-                            srt = sell.copy()
-                            srt.sort()
-                            card = money_card[sell.index(srt[0])]
-                            for e in range(len(effects)):
-                                if effects[e]['id'] == card:
-                                    idx = len(effects) - e - 1
-                                    break
-                            more_steps.extend(self.steps_sell(idx))
+                            if idx % 2 == 1:
+                                idx -= 1
+                            value += rarity_list[str(idx)]['rarity'] * 3 + 3 if idx != 1670 else 50
+                            if idx not in priority_sell and idx not in priority_sell2:
+                                other = e
+                        if value < need:
+                            print('卖完剩一张资源卡也不够钱，要重开了')
+                            more_steps.extend(self.steps_restart())
+                        elif other >= 0:
+                            more_steps.extend(self.steps_sell(len(effects) - other -1))
                         else:
-                            can_earn = 0
-                            sell = []
+                            money_card = []
                             for e in range(len(effects)):
                                 idx = effects[e]['id']
-                                if idx % 2 == 1:
-                                    idx -= 1
-                                if idx in priority_sell:
-                                    sell.append(priority_sell.index(idx))
-                                    if idx == 1670:
-                                        can_earn += 50
-                                    else:
-                                        can_earn += rarity_list[str(idx)]['rarity'] * 3 + 3
-                                else:
-                                    sell.append(100)
-                            srt = sell.copy()
-                            srt.sort()
-                            idx = len(effects) - sell.index(srt[0]) - 1
-                            if can_earn + self.qingyun_coin < need:
-                                print('卖完剩一张资源卡也不够钱，要重开了')
-                                more_steps.extend(self.steps_restart())
-                            elif srt[0] == 100:
-                                print('剩一张资源卡，要重开了')
-                                more_steps.extend(self.steps_restart())
+                                if idx in priority_sell2:
+                                    money_card.append(effects[e]['id'])
+                            # 有经济卡优先卖经济卡
+                            if len(money_card) >= 2:
+                                sell = []
+                                for e in money_card:
+                                    sell.append(priority_sell2.index(e))
+                                srt = sell.copy()
+                                srt.sort()
+                                card = money_card[sell.index(srt[0])]
+                                idx = -1
+                                for e in range(len(effects)):
+                                    if effects[e]['id'] == card:
+                                        idx = len(effects) - e - 1
+                                        break
+                                more_steps.extend(self.steps_sell(idx))
                             else:
+                                sell = []
+                                for e in range(len(effects)):
+                                    idx = effects[e]['id']
+                                    if idx % 2 == 1:
+                                        idx -= 1
+                                    if idx in priority_sell:
+                                        sell.append(priority_sell.index(idx))
+                                    else:
+                                        sell.append(100)
+                                srt = sell.copy()
+                                srt.sort()
+                                idx = len(effects) - sell.index(srt[0]) - 1
                                 more_steps.extend(self.steps_sell(idx))
                     else:
-                        print('完全没钱，要重开了')
+                        print('剩一张资源卡，要重开了')
                         more_steps.extend(self.steps_restart())
 
         else:
@@ -848,6 +860,21 @@ class Automation:
         ans.append(ActionStepDelay(0.1))
         ans.append(ActionStepClick())
 
+        return ans
+
+    def steps_sell2(self, idx: int):
+        ans: list[ActionStep] = []
+        x, y = 3 + 1.2 * idx, 0.8
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepDelay(0.1))
+        ans.append(ActionStepClick())
+        x, y = 4.6 + 1.2 * idx, 4.2
+        ans.append(ActionStepDelay(0.6))
+        ans.append(ActionStepMove(x * self.scaler, y * self.scaler))
+        ans.append(ActionStepDelay(0.1))
+        ans.append(ActionStepClick())
+
+        ans.append(ActionStepDelay(0.7))
         return ans
 
     def steps_restart(self):
