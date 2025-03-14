@@ -723,7 +723,7 @@ class Automation:
                     if len(effects) > 1:
                         # 卖无关人人员
                         other = -1
-                        value = -6
+                        value = -6 + self.qingyun_coin
                         for e in range(len(effects)):
                             idx = effects[e]['id']
                             if idx % 2 == 1:
